@@ -364,6 +364,10 @@ The `voom()` function takes as arguments our `DGEList` object and our design mat
 v <- voom(dge, design, plot = TRUE)
 ```
 
+The voom plot shows the mean-variance relationship of the data. Each point is a gene: the x-axis is its average log2 expression, and the y-axis is the square root of its residual standard deviation from the linear model ("sqrt(standard deviation)"). The red line is the trend fitted across all genes. The idea is that the variance of a gene can be estimated as a function of its mean expression, and that this estimate is more accurate than the direct calculation of the variance.
+
+A good voom plot shows a smooth trend that decreases as expression increases: lowly expressed genes are more variable than highly expressed ones. If the trend instead rises sharply at the low-expression end, many very lowly expressed genes remain, which suggests filtering was insufficient.
+
 The output of `voom()` (our variable `v`) is an `EList` object which contains the following elements:
 
 -   `genes`: a data frame of gene annotation data.
@@ -371,8 +375,6 @@ The output of `voom()` (our variable `v`) is an `EList` object which contains th
 -   `E`: a numeric matrix of normalised log-cpm values.
 -   `weights`: a numeric matrix of precision weights.
 -   `design`: the design matrix.
-
-The voom plot shows the mean-variance relationship of the data. The x-axis is the average log2 expression of each gene, and the y-axis is the square root of the standard deviation of each gene. The idea is that the variance of a gene can be estimated as a function of its mean expression, and that this estimate is more accurate than the direct calculation of the variance.
 
 ### Fitting the linear model
 
@@ -410,7 +412,7 @@ By default, `decideTests()` adjusts p-values for multiple testing using the Benj
 
 ```{r}
 dt <- decideTests(efit)
-dt
+head(dt)
 ```
 
 To obtain the total number of differentially expressed genes for each comparison, we can add the function `summary()`:
@@ -418,6 +420,8 @@ To obtain the total number of differentially expressed genes for each comparison
 ```{r}
 summary(dt)
 ```
+
+Both comparisons involving the basal cells have a large number of DE genes (more than 9,000 each), while LP vs ML has the fewest (about half as many). This matches the MDS plot, where the basal samples separate from the LP and ML samples along the first dimension, and the LP and ML samples sit closer to each other.
 
 The function `topTable()` can be used to obtain more information on the differentially expressed genes for each contrast. `topTable()` takes as arguments the `MArrayLM` object output by `eBayes()` (`efit`), the contrast name of interest and the number of top differentially expressed genes to output. Note that the contrast name must be given in quotes and must be exactly as written in the contrast matrix `contr_matrix`.
 
@@ -436,6 +440,8 @@ top <- topTable(efit, coef = "BasalvsLP", n = Inf)
 head(top)
 ```
 
+By default the genes are sorted by the `B` statistic, so the genes with the strongest evidence of DE come first. Because the contrast is `Basal - LP`, a positive `logFC` means the gene is higher in basal cells and a negative `logFC` means it is higher in LP cells. The six genes shown here all have negative `logFC`, so they are more highly expressed in LP cells.
+
 ## MA plot
 
 The MA plot is a plot of log-fold-change (M-values) against log-expression averages (A-values). This is a common plot in RNA-seq analysis to visualise the result of differential expression tests. It can be created using the `plotMA()` function from the `limma` package. Creating this plot requires three pieces of information:
@@ -447,6 +453,8 @@ The MA plot is a plot of log-fold-change (M-values) against log-expression avera
 ```{r}
 plotMA(efit, coef = 1, status = dt[, "BasalvsLP"])
 ```
+
+The coloured points are the DE genes: up-regulated genes (higher in basal cells) sit above zero and down-regulated genes (higher in LP cells) sit below it. Notice that at the low-expression end (left of the plot), genes rarely reach significance even with a large log-fold-change. Counts for these genes are small and noisy, so a large log-fold-change there is weak evidence of a real difference.
 
 ## Heatmap
 
@@ -499,6 +507,8 @@ heatmap <- pheatmap(
   fontsize_row = 6 # small font so gene labels fit
 )
 ```
+
+The samples cluster by cell type, so the three replicates of each group sit next to each other. The genes form blocks that are high in one group and low in the others, reflecting the genes that distinguish each cell type. Because each row is scaled to a z-score, the colour shows whether a gene is high or low relative to its own average across samples, not its absolute expression level: a red cell in one row and a red cell in another do not mean the two genes are expressed at similar levels.
 
 ## Saving all the results
 
