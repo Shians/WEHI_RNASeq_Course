@@ -52,6 +52,9 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
 BiocManager::install("RNAseq123")
+
+# used for the heatmap, and for labels in the Extra content plots
+install.packages(c("pheatmap", "ggrepel"))
 ```
 
 ## Loading in read count data and annotation
@@ -465,12 +468,6 @@ The coloured points are the DE genes: up-regulated genes (higher in basal cells)
 
 Finally we can create a heatmap of the differentially expressed genes. The heatmap is a useful way to visualise the expression of the differentially expressed genes across the samples. We can use the `pheatmap` package to create the heatmap.
 
-If you haven't already, install the package:
-
-```{r, eval = FALSE}
-install.packages("pheatmap")
-```
-
 We take the top 50 DE genes from each contrast, combine them, and plot their log-cpm values, labelled with gene symbols.
 
 ```{r}
@@ -632,12 +629,6 @@ ggplot(mds_tibble, aes(x = x, y = y, col = group)) +
 ```
 
 We see that some labels are very hard to read because they overlap, so we can use the `ggrepel` package to fix this. The `ggrepel` package creates labels that repel each other in order to avoid overlap. It's a good idea to use it in conjunction with `geom_point()` in order to keep track of exact coordinates of the data points.
-
-If you haven't already, install the package:
-
-```{r, eval = FALSE}
-install.packages("ggrepel")
-```
 
 ```{r}
 library(ggrepel)
