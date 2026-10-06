@@ -86,15 +86,15 @@ samplenames <- c(
 )
 ```
 
-## A brief detour to factors
-
-Note that when we declared the `group` variable, we used factors. Factors are a special data type that is used to encode categorical variables. They have multiple useful properties in comparison to regular character vectors:
+::: {.callout-note collapse="true" title="A brief detour to factors"}
+When we declared the `group` variable, we used a factor. Factors are a special data type used to encode categorical variables. They have several useful properties compared with regular character vectors:
 
 - They allow you to specify the order of the levels.
 - They are stored as integers but displayed as labels.
 - They encode all the valid levels of the factor, even if they are not present in the data.
 
 Specifying the order of the levels is useful because it allows you to rearrange labels when used in plots. In this data we would have the "Basal" group first, followed by "LP" and then "ML". Using `parse_factor()` also allows you to check that the values are all valid levels. For example, if one of the samples were labelled "Bassal" instead of "Basal", it would throw an error. You can read the R for Data Science [chapter on factors](https://r4ds.had.co.nz/factors.html) for more information, and see the [forcats package](https://forcats.tidyverse.org) for many useful functions for working with factors.
+:::
 
 ## Creating the DGEList object
 
@@ -178,11 +178,15 @@ Sequencing depth is accounted for by calculating the cpm. This metric is calcula
 2.  dividing this by 1,000,000 to get the 'per million' scaling factor,
 3.  then dividing all read counts for each gene in that sample by the 'per million' scaling factor
 
-RNA composition can be accounted for by using more sophisticated normalisation methodologies. We will use 'trimmed mean of M-values' (TMM), which estimates relative RNA levels from RNA-seq data [@robinson2010]. Under the assumption that most genes are not differentially expressed, TMM calculates a library size scaling factor for each library (sample). This is done using the following steps:
+RNA composition can be accounted for by using more sophisticated normalisation methodologies. We will use 'trimmed mean of M-values' (TMM), which estimates relative RNA levels from RNA-seq data [@robinson2010]. Under the assumption that most genes are not differentially expressed, TMM calculates a library size scaling factor for each library (sample) from the genes that remain after trimming those with the most extreme log-fold-changes and expression levels.
+
+::: {.callout-tip collapse="true" title="Going deeper: how TMM works"}
+TMM calculates the scaling factor for each library using the following steps:
 
 1.  calculate the gene expression log-fold-changes and absolute expression values for pairwise samples (selecting one sample from the experiment as a reference)
 2.  remove the genes with the highest and lowest log-fold-changes and absolute expression values
 3.  take a weighted mean of the remaining genes (where the weight is the inverse of the approximate asymptotic variances). This gives the normalisation factor for each library (sample)
+:::
 
 Subsequent steps in this analysis will use log-cpm values, calculated using the normalisation factors to scale each library size.
 
@@ -339,7 +343,11 @@ contr_matrix <- makeContrasts(
 contr_matrix
 ```
 
-There are two things to note about a contrast matrix. First, the sum of the numbers in each column is equal to 0. Second, the way that you set up the equation in the matrix will determine the interpretation of the log-fold-change calculated later, as well as the meaning of up-regulated and down-regulated genes. For example, the contrast `Basal - LP` will give a positive log-fold-change for genes that are up-regulated in the `Basal` group compared to the `LP` group. If we had set up the contrast as `LP - Basal`, then the opposite would be true, and we would get a negative log-fold-change for genes that are up-regulated in the `Basal` group compared to the `LP` group.
+Note that the way that you set up the equation in the matrix will determine the interpretation of the log-fold-change calculated later, as well as the meaning of up-regulated and down-regulated genes. For example, the contrast `Basal - LP` will give a positive log-fold-change for genes that are up-regulated in the `Basal` group compared to the `LP` group. If we had set up the contrast as `LP - Basal`, then the opposite would be true, and we would get a negative log-fold-change for genes that are up-regulated in the `Basal` group compared to the `LP` group.
+
+::: {.callout-tip collapse="true" title="Going deeper: why the columns sum to zero"}
+The numbers in each column of a contrast matrix sum to 0. Each contrast compares groups against each other, so the weights on one side balance those on the other.
+:::
 
 ### Variance modelling with voom
 
@@ -383,7 +391,11 @@ With these values we essentially want to know whether or not the difference in v
 
 ## Statistical testing
 
-To actually test if the values are significantly different from 0, we use the `eBayes()` function to compute moderated t-statistics, moderated F-statistics and log-odds of differential expression for each gene, given a fitted linear model. 'Moderated' refers to empirical Bayes moderation, which borrows information across genes to obtain more accurate measures of variability for each gene. This also increases our power to detect differentially expressed genes.
+To actually test if the values are significantly different from 0, we use the `eBayes()` function to compute a moderated t-statistic for each gene, given a fitted linear model. 'Moderated' refers to empirical Bayes moderation, which borrows information across genes to obtain more accurate measures of variability for each gene. This also increases our power to detect differentially expressed genes.
+
+::: {.callout-tip collapse="true" title="Going deeper: other statistics from eBayes()"}
+As well as moderated t-statistics, `eBayes()` computes moderated F-statistics, which test all contrasts at once, and the log-odds of differential expression for each gene. The log-odds appears as the `B` column in the output of `topTable()`.
+:::
 
 ```{r}
 efit <- eBayes(vfit)
