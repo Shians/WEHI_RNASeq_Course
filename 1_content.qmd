@@ -92,7 +92,7 @@ Note that when we declared the `group` variable, we used factors. Factors are a 
 - They are stored as integers but displayed as labels.
 - They encode all the valid levels of the factor, even if they are not present in the data.
 
-Specifying the order of the levels is useful because it allows you to re-arrange labels when used in plots. In this data we would have the "Basal" group first, followed by "LP" and then "ML". Using `parse_factor()` also allows you to check that the values are all valid levels, for example if one of the samples was labelled "Bassal" instead of "Basal", it would throw an error. You can read the R for Data Science [chapter on factors](https://r4ds.had.co.nz/factors.html) for more information, as well as the [forcats package](https://forcats.tidyverse.org) for many useful functions for working with factors.
+Specifying the order of the levels is useful because it allows you to re-arrange labels when used in plots. In this data we would have the "Basal" group first, followed by "LP" and then "ML". Using `parse_factor()` also allows you to check that the values are all valid levels. For example, if one of the samples were labelled "Bassal" instead of "Basal", it would throw an error. You can read the R for Data Science [chapter on factors](https://r4ds.had.co.nz/factors.html) for more information, and see the [forcats package](https://forcats.tidyverse.org) for many useful functions for working with factors.
 
 ## Creating the DGEList object
 
@@ -121,7 +121,7 @@ dge$genes <- gene_anno
 A more common way to create a `DGEList` object is to read in the count data as a matrix and then create the `DGEList` object using the `DGEList()` function. We can pull apart our existing `DGEList` object and recreate it using this method. In practice, you will likely be downloading count data as a matrix from a file, and then creating the `DGEList` object using the `DGEList()` function, so this is a useful exercise to understand how to construct the data object from its components.
 
 ::: {.callout-note}
-What you can do with data objects is determined by the package that the object comes from. You will need to read the package documentation to find out how to access data from the object. Here `edgeR` informs us that the `DGEList` has data that can be accessed as if it was a list.
+What you can do with data objects is determined by the package that the object comes from. You will need to read the package documentation to find out how to access data from the object. Here `edgeR` informs us that the `DGEList` has data that can be accessed as if it were a list.
 :::
 
 ```{r}
@@ -141,7 +141,7 @@ The first step of our analysis is to filter out lowly expressed genes. There are
 
 - Technical variation is more problematic for low abundance genes. This variation is thought to be due to two factors: insufficient mixing and low sampling fraction [@mcintyre2011].
   - Insufficient mixing of solutions during library preparation can result in uneven distribution of reads.
-  - RNA-seq can be thought of as sampling. Measurement errors will occur simply due to the random nature of the sampling process. This problem affects lowly abundant RNA species more because the relative error for small count values is larger than it would be for more highly abundant RNA species.
+  - RNA-seq can be thought of as sampling. Measurement errors will occur simply due to the random nature of the sampling process. This problem affects low-abundance RNA species more because the relative error for small count values is larger than it would be for more highly abundant RNA species.
 - Genes that are very lowly expressed do not produce sufficient information to be useful for biological interpretation. For example, it is very hard to believe the biological significance of genes that have counts ranging from 0 to 3 across samples even if they come up as statistically significant.
 
 Removing these highly variable, lowly expressed genes increases your 'power' to detect differentially expressed genes [@bourgon2010], where 'power' is your ability to detect true positives. In testing for differential expression, a statistical test is conducted for each gene. When a high number of statistical tests are performed, a portion of them will be significant purely due to random chance. A common procedure to control for the number of false positives is to perform 'multiple testing correction' on the p-values. This adjusts the p-value in a way that reduces the number of false positives but comes at the cost of reduced power to detect true positives. If we filter out uninteresting, lowly expressed genes, we need to perform fewer statistical tests and reduce the impact that multiple testing adjustment has on detection power.
@@ -159,7 +159,7 @@ dge <- dge[keep, , keep.lib.sizes = FALSE] # drop the filtered genes and recalcu
 dim(dge$counts)
 ```
 
-We can see that we now have 16624 genes. We started with 27179 genes - meaning that ~40% of genes have been filtered out.
+We can see that we now have 16624 genes. We started with 27179 genes, meaning that ~40% of genes have been filtered out.
 
 ## Library-size normalisation
 
@@ -168,7 +168,7 @@ After filtering, our next step is to normalise the data. Normalisation refers to
 There are two main factors that need to be normalised for in RNA-seq:
 
 - Sequencing depth/library size - technically, sequencing a sample to half the depth will give, on average, half the number of reads mapping to each gene [@robinson2010].
-- RNA composition - if a large number of genes are unique to, or highly expressed in, only one experimental condition, the sequencing capacity available for the remaining genes in that sample is decreased. For example, if there are only five genes being studied in two experimental groups, if one gene is particularly high in group A, then with limited sequencing depth, that gene will reduce the counts of the remaining four genes. The effect of this is that the remaining four genes appear under-expressed in group A compared to group B when the true amount of gene product is actually equal for these 4 genes [@robinson2010].
+- RNA composition - if a large number of genes are unique to, or highly expressed in, only one experimental condition, the sequencing capacity available for the remaining genes in that sample is decreased. For example, suppose only five genes are studied in two experimental groups. If one gene is particularly high in group A, then with limited sequencing depth that gene will reduce the counts of the remaining four genes. As a result, the remaining four genes appear under-expressed in group A compared to group B, even though the true amount of gene product is equal for these four genes [@robinson2010].
 
 Sequencing depth is accounted for by calculating the counts per million (cpm). This metric is calculated by:
 
@@ -198,7 +198,7 @@ Let's take a look at our normalisation factors:
 dge$samples
 ```
 
-These normalisation factors are all close to 1 for all samples, suggesting minimal difference in RNA composition between samples.
+These normalisation factors are close to 1 for all samples, suggesting minimal difference in RNA composition between samples.
 
 ## Visualising the effect of normalisation
 
@@ -232,7 +232,7 @@ We see that by performing normalisation on our data, the gene expression values 
 
 Before we perform statistical tests, it's useful to perform some exploratory visual analysis to get an overall idea of how our data is behaving.
 
-MDS is a way to visualise distances between sets of data points (samples in our case). It is a dimensionality reduction technique, similar to principal components analysis (PCA). We treat gene expression in samples as if they were coordinates in a high-dimensional coordinate system, then we can find "distances" between samples as we do between points in space. Then the goal of the algorithm is to find a representation in lower dimensional space such that the distance between any two points in high dimensional space is preserved in lower dimensions.
+MDS is a way to visualise distances between sets of data points (samples in our case). It is a dimensionality reduction technique, similar to principal components analysis (PCA). We treat gene expression in samples as if they were coordinates in a high-dimensional coordinate system. We can then find "distances" between samples as we do between points in space. The goal of the algorithm is to find a representation in lower dimensional space such that the distance between any two points in high dimensional space is preserved in lower dimensions.
 
 The `plotMDS()` function from `limma` creates an MDS plot from a `DGEList` object.
 
@@ -240,7 +240,7 @@ The `plotMDS()` function from `limma` creates an MDS plot from a `DGEList` objec
 plotMDS(dge)
 ```
 
-Each point on the plot represents one sample and is 'labelled' using the sample name. The distances between each sample in the resulting plot can be interpreted as the typical log2-fold-change between the samples, for the most differentially expressed genes.
+Each point on the plot represents one sample and is 'labelled' using the sample name. The distances between samples in the resulting plot can be interpreted as the typical log2-fold-change between the samples, for the most differentially expressed genes.
 
 We can change the labelling to use the name of the group the sample belongs to instead:
 
@@ -288,7 +288,7 @@ dge <- calcNormFactors(dge, method = "TMM")
 
 ## Linear modelling
 
-To identify differentially expressed genes from our normalised gene expression data, we will use the `limma` package to fit linear models to the genes. A linear model is a broad class of statistical models that fit the value of a response (or dependent) variable as a linear function of one or more explanatory (or independent) variables (also called covariates).
+To identify differentially expressed genes from our normalised gene expression data, we will use the `limma` package to fit linear models to the genes. Linear models are a broad class of statistical models that fit the value of a response (or dependent) variable as a linear function of one or more explanatory (or independent) variables (also called covariates).
 
 The general form of a linear model looks like this:
 
@@ -345,7 +345,7 @@ We are now ready to fit our linear models. `limma` fits linear models to the dat
 
 In addition to the normalisation steps, the limma-voom pipeline uses the `voom()` function to generate weights for the individual observations based on a modelled mean-variance relationship. The mean-variance relationship is used to estimate the variance of each individual observation of sample-gene expression, and by applying these weights to the linear modelling step, it helps the data better meet the assumptions of the linear model and results in more accurate statistical inferences.
 
-The `voom()` function takes as arguments our `DGEList` object and our design matrix. It also optionally outputs a plot of the mean-variance relationship of our data, called the 'voom-plot'.
+The `voom()` function takes as arguments our `DGEList` object and our design matrix. It also optionally outputs a plot of the mean-variance relationship of our data, called the 'voom plot'.
 
 ```{r}
 v <- voom(dge, design, plot = TRUE)
@@ -363,7 +363,7 @@ The voom plot shows the mean-variance relationship of the data. The x-axis is th
 
 ### Fitting the linear model
 
-We are now ready to fit our linear model with `lmFit()`, which calculates coefficients we defined in our design matrix `design`. The resulting object, `vfit`, is an `MArrayLM` object. It contains information about our genes (the same data frame as `genes` from our `EList` object `v` above), the design matrix and a number of statistical outputs. Of most interest to us are the coefficients, stored in an element called `coefficients`. The first rows of this matrix are shown below. Each gene is a row and is labelled using the EntrezID. Each column gives coefficients for each of our phenotype groups. These coefficients are weighted averages of the log-cpm of each gene in each group.
+We are now ready to fit our linear model with `lmFit()`, which estimates the coefficients defined in our design matrix `design`. The resulting object, `vfit`, is an `MArrayLM` object. It contains information about our genes (the same data frame as `genes` from our `EList` object `v` above), the design matrix and a number of statistical outputs. Of most interest to us are the coefficients, stored in an element called `coefficients`. The first rows of this matrix are shown below. Each gene is a row and is labelled using the EntrezID. Each column gives coefficients for each of our phenotype groups. These coefficients are weighted averages of the log-cpm of each gene in each group.
 
 ```{r}
 vfit <- lmFit(v)
@@ -441,7 +441,7 @@ If you haven't already, install the package:
 install.packages("pheatmap")
 ```
 
-The data we will use for the heatmap is going to be the log2 cpm expression values of the top differentially expressed genes. We can use the `topTable()` function to get the top differentially expressed genes for each contrast. We can then use the `cpm()` function to get the expression values of these genes. We will take the top 50 genes from each contrast and combine them into a single data frame. We will then extract the expression values for these genes from the full expression matrix. For more interpretable labels, we will use the gene symbols as the row names of the expression matrix.
+The data we will use for the heatmap is going to be the log-cpm expression values of the top differentially expressed genes. We can use the `topTable()` function to get the top differentially expressed genes for each contrast. We can then use the `cpm()` function to get the expression values of these genes. We will take the top 50 genes from each contrast and combine them into a single data frame. We will then extract the expression values for these genes from the full expression matrix. For more interpretable labels, we will use the gene symbols as the row names of the expression matrix.
 
 Note that by default the ENTREZID column is encoded as a numeric value, so to use it to subset our expression matrix we need to convert it to a character vector in order to select the matching IDs rather than trying to select the numerical rows of the data.
 
@@ -458,7 +458,7 @@ top_gene_expr <- cpm(dge, log = TRUE)[as.character(top_genes$ENTREZID), ]
 rownames(top_gene_expr) <- top_genes$SYMBOL
 ```
 
-To create the heatmap we will use the `pheatmap()` function with the expression matrix. We will add in arguments to provide our own colour scale, to scale the data along the rows with a z-score, adding in sample annotation and clustering the data by rows and columns. We will also add in the option to show the row names and column names, and set the font size of the row names. You can experiment with removing each of these options to see how they affect the heatmap, as well as investigate additional options in the `pheatmap()` documentation.
+To create the heatmap we will use the `pheatmap()` function with the expression matrix. We will add in arguments to provide our own colour scale, scale the data along the rows with a z-score, add sample annotation, and cluster the data by rows and columns. We will also add in the option to show the row names and column names, and set the font size of the row names. You can experiment with removing each of these options to see how they affect the heatmap, as well as investigate additional options in the `pheatmap()` documentation.
 
 ```{r}
 library(pheatmap)
@@ -491,7 +491,7 @@ write_csv(top, "output/top_genes_BasalvsLP.csv")
 ggsave("output/heatmap.png", heatmap$gtable, height = 10, width = 7)
 ```
 
-With that we have come to the conclusion of the RNA-seq analysis and this course. You have now learned how to use various `tidyverse` packages to operate on data and create publication quality figures. You have also learned how to use the `limma` and `edgeR` packages to perform differential expression analysis on RNA-seq data. You should now be able to apply these skills to perform analysis on your own data.
+With that we have come to the conclusion of the RNA-seq analysis and this course. You have now learned how to use various `tidyverse` packages to operate on data and create publication-quality figures. You have also learned how to use the `limma` and `edgeR` packages to perform differential expression analysis on RNA-seq data. You should now be able to apply these skills to perform analysis on your own data.
 
 # Extra content
 
@@ -559,7 +559,7 @@ ggplot(mds_tibble, aes(x = x, y = y, col = group)) +
   )
 ```
 
-We see that some labels are very hard to read due to the overlapping, so we can use the `ggrepel` package to fix this. The `ggrepel` package creates labels that repel each other in order to avoid overlap. It's a good idea to use it in conjunction with `geom_point()` in order to keep track of exact coordinates of the data points.
+We see that some labels are very hard to read because they overlap, so we can use the `ggrepel` package to fix this. The `ggrepel` package creates labels that repel each other in order to avoid overlap. It's a good idea to use it in conjunction with `geom_point()` in order to keep track of exact coordinates of the data points.
 
 If you haven't already, install the package:
 
