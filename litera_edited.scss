@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Mona+Sans:ital,wght@0,200..900;1,200..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Mona+Sans:ital,wght@0,200..900;1,200..900&family=JetBrains+Mono:ital,wght@0,400;0,700;1,400&display=swap');
 
 /*-- scss:defaults --*/
 
@@ -53,6 +53,7 @@ $body-color:                #002060 !default;
 $font-family-headings: 'Mona Sans', sans-serif !default;
 $font-family-body: 'Mona Sans', sans-serif !default;
 $font-family-sans-serif: 'Mona Sans', sans-serif;
+$font-family-monospace: 'JetBrains Mono', SFMono-Regular, Menlo, Consolas, monospace;
 $headings-color: $blue !default;
 
 // stylelint-enable
@@ -409,3 +410,27 @@ table,
 div.cell-output.cell-output-error > pre > code {
     color: #c5060c !important;
   }
+// centre the page content in the space beside the docked sidebar.
+// Quarto puts all spare width in a 5fr column on the right; split it
+// evenly with a new 1fr gutter between the sidebar and the body.
+@media (min-width: 992px) {
+  body.docked .page-columns,
+  body.docked.fullcontent .page-columns {
+    grid-template-columns:
+      [screen-start] 1.5em
+      [screen-start-inset page-start] minmax(60px, 120px)
+      [page-start-inset] 60px
+      [body-start-outset] 60px
+      [sidebar-end] 1fr
+      [body-start] 1.5em
+      [body-content-start] minmax(500px, calc(800px - 3em))
+      [body-content-end] 1.5em
+      [body-end body-end-outset page-end-inset page-end] 1fr
+      [screen-end-inset] 1.5em
+      [screen-end];
+  }
+
+  body.docked .sidebar.sidebar-navigation {
+    grid-column: screen-start / sidebar-end;
+  }
+}
