@@ -7,7 +7,10 @@ _book/
 _freeze/
 .Rhistory
 
-data/
+data/*
+!data/mouse_mammary_counts.csv
+!data/mouse_mammary_samples.csv
+
 misc/
 renv/
 output

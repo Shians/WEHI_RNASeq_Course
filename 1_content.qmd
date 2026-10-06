@@ -34,12 +34,23 @@ The focus is on running the workflow and building the data structures the packag
 
 ## Data files
 
-You can download and unzip the files using the following commands:
+The data comes as two files, the form in which you will usually receive RNA-seq data from a sequencing facility or a processing pipeline:
+
+- `mouse_mammary_counts.csv`: the count matrix. Each row is a gene and each column is a sample, giving the number of reads assigned to that gene in that sample. The first three columns annotate the genes: the Entrez gene ID (`ENTREZID`), the gene symbol (`SYMBOL`) and the chromosome (`TXCHROM`).
+- `mouse_mammary_samples.csv`: the sample metadata. Each row describes one sample: its name, GEO accession, cell type (`group`) and the sequencing lane it was run on.
+
+You can download the files using the following commands:
 
 ```{r}
-download.file("https://github.com/Shians/BaseR_Intro/raw/master/data/workshop_data.zip", "workshop_data.zip")
-unzip("workshop_data.zip", exdir = "data")
-unzip("data/Ses3_counts.zip", exdir = "data/counts")
+dir.create("data", showWarnings = FALSE)
+download.file(
+  "https://raw.githubusercontent.com/Shians/WEHI_RNASeq_Course/main/data/mouse_mammary_counts.csv",
+  "data/mouse_mammary_counts.csv"
+)
+download.file(
+  "https://raw.githubusercontent.com/Shians/WEHI_RNASeq_Course/main/data/mouse_mammary_samples.csv",
+  "data/mouse_mammary_samples.csv"
+)
 ```
 
 ## R packages
@@ -62,7 +73,7 @@ install.packages(c("pheatmap", "ggrepel"))
 
 ## Loading in read count data and annotation
 
-We will use the `edgeR` package to load and store the data.
+We will use the `edgeR` package to store the data and run the first steps of the analysis.
 
 To use the `edgeR` package we first need to construct a `DGEList` object. This object contains three key pieces of data:
 
@@ -76,25 +87,30 @@ Data objects in general are a way to store related pieces of information togethe
 
 :::
 
+We first load the packages and read in both files.
+
 ```{r, warning=FALSE, message=FALSE}
 # load required packages
 library(tidyverse)
 library(edgeR)
 library(limma)
 
-group <- parse_factor(
-  c("LP", "ML", "Basal", "Basal", "ML", "LP", "Basal", "ML", "LP"),
-  levels = c("Basal", "LP", "ML")
-)
+counts_table <- read_csv("data/mouse_mammary_counts.csv")
+samples <- read_csv("data/mouse_mammary_samples.csv")
 
-samplenames <- c(
-  "10_6_5_11", "9_6_5_11", "purep53", "JMS8-2", "JMS8-3",
-  "JMS8-4", "JMS8-5", "JMS9-P7c", "JMS9-P8c"
-)
+counts_table
+samples
+```
+
+The `group` column of `samples` was read in as text. We convert it to a factor, which tells R that it is a categorical variable and fixes the order of its levels.
+
+```{r}
+samples <- samples %>%
+  mutate(group = parse_factor(group, levels = c("Basal", "LP", "ML")))
 ```
 
 ::: {.callout-note collapse="false" title="A brief detour to factors"}
-When we declared the `group` variable, we used a factor. Factors are a special data type used to encode categorical variables. They have several useful properties compared with regular character vectors:
+Factors are a special data type used to encode categorical variables. They have several useful properties compared with regular character vectors:
 
 - They allow you to specify the order of the levels.
 - They are stored as integers but displayed as labels.
@@ -105,42 +121,34 @@ Specifying the order of the levels is useful because it allows you to rearrange 
 
 ## Creating the DGEList object
 
-We will create a `DGEList` object following the `RNAseq123` workflow. We use the `readDGE()` function to read in count data from files, provide sample information to `readDGE()` at the same time, and add the gene annotation information afterwards.
-
-```{r, warning=FALSE, message=FALSE}
-# vector of file names
-files <- dir(path = "data/counts", pattern = "GSM*")
-
-# create DGEList object
-dge <- readDGE(
-  files,
-  path = "data/counts",
-  columns = c(1, 3),
-  group = group,
-  labels = samplenames
-)
-
-# add gene annotation information
-gene_anno <- read_tsv("data/Ses3_geneAnnot.tsv")
-dge$genes <- gene_anno
-```
-
-## Alternative construction of the DGEList object
-
-We used `readDGE()` above because our data arrives as one count file per sample, which `readDGE()` reads directly. A more common way to create a `DGEList` object is to read in the count data as a matrix and then create the `DGEList` object using the `DGEList()` function. We can pull apart our existing `DGEList` object and recreate it using this method. In practice, you will likely be downloading count data as a matrix from a file, and then creating the `DGEList` object using the `DGEList()` function, so this is a useful exercise to understand how to construct the data object from its components.
-
-::: {.callout-note}
-What you can do with data objects is determined by the package that the object comes from. You will need to read the package documentation to find out how to access data from the object. Here `edgeR` informs us that the `DGEList` has data that can be accessed as if it were a list.
-:::
+The counts file mixes gene annotation with the counts, so we split it into its two parts. The annotation columns become the `genes` data frame. The remaining columns become the count matrix, with the Entrez IDs as row names so that each row stays labelled with its gene.
 
 ```{r}
-counts <- dge$counts    # Usually read in from some counts.txt file
-samples <- dge$samples  # Usually read in or constructed from sample metadata
-genes <- dge$genes      # Usually read in from some gene_anno.txt or constructed from rownames of the counts matrix
+genes <- counts_table %>%
+  select(ENTREZID, SYMBOL, TXCHROM)
 
-# create DGEList object
-dge <- DGEList(counts = counts, samples = samples, genes = genes)
+counts <- counts_table %>%
+  select(-ENTREZID, -SYMBOL, -TXCHROM) %>%
+  as.matrix()
+rownames(counts) <- genes$ENTREZID
 ```
+
+Each row of `samples` must describe the matching column of `counts`. `DGEList()` cannot check this for us, and a mismatch would silently assign samples to the wrong groups, so we check it ourselves before building the object.
+
+```{r}
+all(colnames(counts) == samples$sample)
+```
+
+The sample names line up, so we can create the `DGEList` object. Because `samples` contains a `group` column, `DGEList()` uses it as the experimental group of each sample.
+
+```{r}
+dge <- DGEList(counts = counts, samples = samples, genes = genes)
+dge
+```
+
+::: {.callout-note}
+What you can do with data objects is determined by the package that the object comes from. You will need to read the package documentation to find out how to access data from the object. Here `edgeR` informs us that the `DGEList` has data that can be accessed as if it were a list, for example `dge$counts` or `dge$samples`.
+:::
 
 Now we have a data object that can be used for downstream analysis.
 
@@ -261,7 +269,7 @@ Each point on the plot represents one sample and is 'labelled' using the sample 
 We can change the labelling to use the name of the group the sample belongs to instead:
 
 ```{r}
-plotMDS(dge, labels = group)
+plotMDS(dge, labels = dge$samples$group)
 ```
 
 This shows us that samples of the same cell type tend to cluster together, meaning that the gene expression profiles are similar for samples within a cell type. The 'Basal' type samples are quite close together while the 'LP' (luminal progenitor) and 'ML' (mature luminal) type samples are further apart, signifying that their expression profiles are more variable.
@@ -276,27 +284,21 @@ library(tidyverse)
 library(edgeR)
 library(limma)
 
-group <- parse_factor(
-  c("LP", "ML", "Basal", "Basal", "ML", "LP", "Basal", "ML", "LP"),
-  levels = c("Basal", "LP", "ML")
-)
+# read in the counts and sample metadata
+counts_table <- read_csv("data/mouse_mammary_counts.csv")
+samples <- read_csv("data/mouse_mammary_samples.csv") %>%
+  mutate(group = parse_factor(group, levels = c("Basal", "LP", "ML")))
 
-samplenames <- c(
-  "10_6_5_11", "9_6_5_11", "purep53", "JMS8-2", "JMS8-3",
-  "JMS8-4", "JMS8-5", "JMS9-P7c", "JMS9-P8c"
-)
+# split the counts table into gene annotation and a count matrix
+genes <- counts_table %>%
+  select(ENTREZID, SYMBOL, TXCHROM)
+counts <- counts_table %>%
+  select(-ENTREZID, -SYMBOL, -TXCHROM) %>%
+  as.matrix()
+rownames(counts) <- genes$ENTREZID
 
 # create DGEList object
-dge <- readDGE(
-  dir(path = "data/counts", pattern = "GSM*"),
-  path = "data/counts",
-  columns = c(1, 3),
-  group = group,
-  labels = samplenames
-)
-
-# add gene annotation information
-dge$genes <- read_tsv("data/Ses3_geneAnnot.tsv")
+dge <- DGEList(counts = counts, samples = samples, genes = genes)
 
 # filter lowly expressed genes
 keep <- filterByExpr(dge)
@@ -548,7 +550,7 @@ ggsave("output/heatmap.png", heatmap$gtable, height = 10, width = 7)
 
 We have used limma-voom to find the genes that are differentially expressed between each pair of the three cell types: basal, LP and ML. The pipeline, with the key function for each step, was:
 
--   Build the count object with `readDGE()` or `DGEList()`.
+-   Build the count object from the counts and sample metadata with `DGEList()`.
 -   Remove lowly expressed genes with `filterByExpr()`.
 -   Normalise for library size and RNA composition with `normLibSizes()`.
 -   Check sample relationships with `plotMDS()`.
@@ -560,7 +562,7 @@ We have used limma-voom to find the genes that are differentially expressed betw
 
 ### Applying this to your own data
 
--   Read in your counts matrix and build the object with `DGEList()`.
+-   Read in your counts matrix and sample metadata, check that the samples line up, and build the object with `DGEList()`.
 -   Set up `group` and the design matrix to match your experiment.
 -   Choose contrasts that answer your own questions.
 -   For more complex designs, see the `limma` User's Guide (`help("limma")`) and the RNAseq123 workflow.
