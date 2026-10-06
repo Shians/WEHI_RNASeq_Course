@@ -462,7 +462,7 @@ The MA plot is a plot of log-fold-change (M-values) against log-expression avera
 plotMA(efit, coef = 1, status = dt[, "BasalvsLP"])
 ```
 
-The coloured points are the DE genes: up-regulated genes (higher in basal cells) sit above zero and down-regulated genes (higher in LP cells) sit below it. Notice that at the low-expression end (left of the plot), genes rarely reach significance even with a large log-fold-change. Counts for these genes are small and noisy, so a large log-fold-change there is weak evidence of a real difference.
+The coloured points are the DE genes: up-regulated genes (higher in basal cells) sit above zero and down-regulated genes (higher in LP cells) sit below it. Notice that the band of non-significant genes (black) is widest at the low-expression end (left of the plot). Counts for these genes are small and noisy, so they need a larger log-fold-change before the difference counts as significant.
 
 ## Heatmap
 
