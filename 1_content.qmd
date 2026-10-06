@@ -90,7 +90,7 @@ samplenames <- c(
 )
 ```
 
-::: {.callout-note collapse="true" title="A brief detour to factors"}
+::: {.callout-note collapse="false" title="A brief detour to factors"}
 When we declared the `group` variable, we used a factor. Factors are a special data type used to encode categorical variables. They have several useful properties compared with regular character vectors:
 
 - They allow you to specify the order of the levels.
@@ -184,7 +184,7 @@ Sequencing depth is accounted for by calculating the cpm. This metric is calcula
 
 RNA composition can be accounted for by using more sophisticated normalisation methodologies. We will use 'trimmed mean of M-values' (TMM), which estimates relative RNA levels from RNA-seq data [@robinson2010]. Under the assumption that most genes are not differentially expressed, TMM calculates a library size scaling factor for each library (sample) from the genes that remain after trimming those with the most extreme log-fold-changes and expression levels.
 
-::: {.callout-tip collapse="true" title="Going deeper: how TMM works"}
+::: {.callout-tip collapse="false" title="Going deeper: how TMM works"}
 TMM calculates the scaling factor for each library using the following steps:
 
 1.  calculate the gene expression log-fold-changes and absolute expression values for pairwise samples (selecting one sample from the experiment as a reference)
@@ -356,7 +356,7 @@ contr_matrix
 
 **The order of the contrast sets the sign: for `Basal - LP`, a positive log-fold-change means higher expression in Basal.** Had we written `LP - Basal`, genes up-regulated in Basal would instead have a negative log-fold-change.
 
-::: {.callout-tip collapse="true" title="Going deeper: why the columns sum to zero"}
+::: {.callout-tip collapse="false" title="Going deeper: why the columns sum to zero"}
 The numbers in each column of a contrast matrix sum to 0. Each contrast compares groups against each other, so the weights on one side balance those on the other.
 :::
 
@@ -406,7 +406,7 @@ A difference significantly greater than 0 means the gene is up-regulated in the 
 
 To actually test if the values are significantly different from 0, we use the `eBayes()` function to compute a moderated t-statistic for each gene, given a fitted linear model. 'Moderated' refers to empirical Bayes moderation, which borrows information across genes to obtain more accurate measures of variability for each gene. This also increases our power to detect differentially expressed genes.
 
-::: {.callout-tip collapse="true" title="Going deeper: other statistics from eBayes()"}
+::: {.callout-tip collapse="false" title="Going deeper: other statistics from eBayes()"}
 As well as moderated t-statistics, `eBayes()` computes moderated F-statistics, which test all contrasts at once, and the log-odds of differential expression for each gene. The log-odds appears as the `B` column in the output of `topTable()`.
 :::
 
