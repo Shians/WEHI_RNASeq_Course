@@ -53,6 +53,9 @@ if (!requireNamespace("BiocManager", quietly = TRUE))
 
 BiocManager::install("RNAseq123")
 
+# used for reading data, data manipulation and plotting
+install.packages("tidyverse")
+
 # used for the heatmap, and for labels in the Extra content plots
 install.packages(c("pheatmap", "ggrepel"))
 ```
