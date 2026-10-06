@@ -17,18 +17,20 @@ options(readr.show_col_types = FALSE)
 
 # RNA-seq workshop
 
-In this workshop we will run through the basic steps for analysing a simple RNA-seq experiment using the [limma-voom workflow](https://f1000research.com/articles/5-1408). This includes:
+Which genes are differentially expressed between three cell types in the mouse mammary gland? In this workshop we answer that question for basal, luminal progenitor (LP) and mature luminal (ML) cells. The cells were sorted from the mammary glands of female virgin mice, with three replicates per cell type (nine samples), and sequenced on Illumina RNA-seq platforms. The data comes from the `RNAseq123` workflow.
+
+By the end you will have a table of differentially expressed (DE) genes for each pairwise comparison, an MA plot and a heatmap of the top DE genes, all saved to an `output` folder.
+
+To get there, we follow the [limma-voom workflow](https://f1000research.com/articles/5-1408):
 
 - filtering out lowly expressed genes
 - normalisation
 - creating a multidimensional scaling (MDS) plot
 - creating a design matrix
-- fitting gene-wise linear models (with empirical Bayes moderation to more accurately estimate gene-wise variability)
-- performing statistical testing for differential expression (DE)
+- fitting gene-wise linear models, with empirical Bayes moderation to better estimate gene-wise variability
+- testing for differential expression
 
-The aim of this workshop is to give you experience with a real-world RNA-seq analysis while making extensive use of an external library. We will not cover the statistics in any depth. Instead, the goal is to understand how to construct data structures required for specific packages and how to use the functions in those packages to perform the analysis.
-
-Much of the material here is explained in greater detail in the `limma` User's Guide. You can view this by typing `help("limma")` and following the links.
+The focus is on running the workflow and building the data structures the packages need, rather than on the underlying statistics, which we cover only as far as needed to interpret the results. For more detail, see the `limma` User's Guide by typing `help("limma")` and following the links.
 
 ## Data files
 
@@ -54,7 +56,7 @@ BiocManager::install("RNAseq123")
 
 ## Loading in read count data and annotation
 
-The data we are looking at comes from three cell populations (basal, luminal progenitor (LP) and mature luminal (ML)) sorted from the mammary glands of female virgin mice, each profiled in triplicate. These samples have been sequenced using Illumina RNA-seq platforms and we will be using the `edgeR` package to analyse the data.
+We will use the `edgeR` package to load and store the data.
 
 To use the `edgeR` package we first need to construct a `DGEList` object. This object contains three key pieces of data:
 
