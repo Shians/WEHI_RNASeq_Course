@@ -5,6 +5,12 @@ on:
 
 name: Quarto Publish
 
+# Each course year is published to its own subdirectory of gh-pages, e.g.
+# https://shians.github.io/WEHI_RNASeq_Course/2026/. The year is read from
+# book.site-url in _quarto.yml, so starting a new year only requires updating
+# that URL. Earlier years are left untouched, and the site root redirects to
+# the most recently published year.
+
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
@@ -13,6 +19,17 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+
+      - name: Determine course year
+        id: year
+        run: |
+          year=$(grep -E '^\s*site-url:' _quarto.yml | grep -oE '/[0-9]{4}/?\s*$' | tr -dc '0-9')
+          if [ -z "$year" ]; then
+            echo "::error::Could not find a year in book.site-url in _quarto.yml"
+            exit 1
+          fi
+          echo "Publishing course year $year"
+          echo "year=$year" >> "$GITHUB_OUTPUT"
 
       - name: Set up R
         uses: r-lib/actions/setup-r@v2
@@ -23,9 +40,42 @@ jobs:
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
-      - name: Render and Publish
-        uses: quarto-dev/quarto-actions/publish@v2
+      - name: Render
+        uses: quarto-dev/quarto-actions/render@v2
+
+      - name: Publish course year
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          target: gh-pages
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./_book
+          destination_dir: ${{ steps.year.outputs.year }}
+          commit_message: "Publish ${{ steps.year.outputs.year }}"
+
+      - name: Build root redirect
+        run: |
+          mkdir -p _root
+          touch _root/.nojekyll
+          cat > _root/index.html <<EOF
+          <!DOCTYPE html>
+          <html>
+            <head>
+              <meta charset="utf-8">
+              <meta http-equiv="refresh" content="0; url=${{ steps.year.outputs.year }}/">
+              <link rel="canonical" href="${{ steps.year.outputs.year }}/">
+              <title>WEHI R RNAseq Course</title>
+            </head>
+            <body>
+              <a href="${{ steps.year.outputs.year }}/">WEHI R RNAseq Course ${{ steps.year.outputs.year }}</a>
+            </body>
+          </html>
+          EOF
+
+      - name: Publish root redirect
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./_root
+          keep_files: true
+          commit_message: "Point site root to ${{ steps.year.outputs.year }}"

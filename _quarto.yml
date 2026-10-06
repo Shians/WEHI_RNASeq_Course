@@ -10,6 +10,7 @@ filters:
 
 book:
   title: "WEHI R RNAseq Course"
+  site-url: https://shians.github.io/WEHI_RNASeq_Course/2026/
   author: "Shian Su & Kathleen Zeglinski"
   date: today
   favicon: "favicon.ico"
