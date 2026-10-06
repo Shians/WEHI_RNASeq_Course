@@ -74,6 +74,7 @@ Data objects in general are a way to store related pieces of information togethe
 # load required packages
 library(tidyverse)
 library(edgeR)
+library(limma)
 
 group <- parse_factor(
   c("LP", "ML", "Basal", "Basal", "ML", "LP", "Basal", "ML", "LP"),
@@ -120,7 +121,7 @@ dge$genes <- gene_anno
 
 ## Alternative construction of the DGEList object
 
-A more common way to create a `DGEList` object is to read in the count data as a matrix and then create the `DGEList` object using the `DGEList()` function. We can pull apart our existing `DGEList` object and recreate it using this method. In practice, you will likely be downloading count data as a matrix from a file, and then creating the `DGEList` object using the `DGEList()` function, so this is a useful exercise to understand how to construct the data object from its components.
+We used `readDGE()` above because our data arrives as one count file per sample, which `readDGE()` reads directly. A more common way to create a `DGEList` object is to read in the count data as a matrix and then create the `DGEList` object using the `DGEList()` function. We can pull apart our existing `DGEList` object and recreate it using this method. In practice, you will likely be downloading count data as a matrix from a file, and then creating the `DGEList` object using the `DGEList()` function, so this is a useful exercise to understand how to construct the data object from its components.
 
 ::: {.callout-note}
 What you can do with data objects is determined by the package that the object comes from. You will need to read the package documentation to find out how to access data from the object. Here `edgeR` informs us that the `DGEList` has data that can be accessed as if it were a list.
@@ -148,7 +149,7 @@ The first step of our analysis is to filter out lowly expressed genes. There are
 
 Filtering out lowly expressed genes means fewer statistical tests, so less multiple testing correction and more power to detect DE genes [@bourgon2010]. 'Power' is your ability to detect true positives. DE analysis runs one test per gene, and with thousands of tests some will be significant purely by chance. 'Multiple testing correction' adjusts the p-values to control these false positives, at the cost of reduced power. The fewer tests we perform, the smaller that cost.
 
-The `edgeR` package provides the `filterByExpr()` function to automate gene filtering. By default, it aims to keep genes with a count of 10 or more, in at least as many samples as the smallest experimental group. In our experiment, there are three phenotype groups, each with three samples. Therefore we retain only genes that have 10 or more counts in three or more samples. The actual filtering is done on counts per million (cpm), to prevent bias against samples with small library sizes. This complex procedure is the reason why the package provides a function to perform the filtering for you.
+The `edgeR` package provides the `filterByExpr()` function to automate gene filtering. By default, it aims to keep genes with a count of 10 or more, in at least as many samples as the smallest experimental group. In our experiment, there are three cell types, each with three samples. Therefore we retain only genes that have 10 or more counts in three or more samples. The actual filtering is done on counts per million (cpm), to prevent bias against samples with small library sizes. This complex procedure is the reason why the package provides a function to perform the filtering for you.
 
 The output of this function is a vector of logicals, indicating which genes (rows) should be kept and which should be filtered out.
 
@@ -257,7 +258,7 @@ We can change the labelling to use the name of the group the sample belongs to i
 plotMDS(dge, labels = group)
 ```
 
-This shows us that the phenotype groups tend to cluster together, meaning that the gene expression profiles are similar for samples within a phenotype group. The 'Basal' type samples are quite close together while the 'LP' (luminal progenitor) and 'ML' (mature luminal) type samples are further apart, signifying that their expression profiles are more variable.
+This shows us that samples of the same cell type tend to cluster together, meaning that the gene expression profiles are similar for samples within a cell type. The 'Basal' type samples are quite close together while the 'LP' (luminal progenitor) and 'ML' (mature luminal) type samples are further apart, signifying that their expression profiles are more variable.
 
 ::: {.callout-tip title="Checkpoint"}
 The next chunk recreates every object we have built so far, from loading the packages to normalising the data. Run it if you are starting from this point or have lost your objects; otherwise you can skip it.
@@ -331,9 +332,9 @@ There are nine rows, one for each sample. Along the columns are the names of the
 
 ### Contrasts
 
-Contrast matrices are companions to design matrices. They are used to specify the comparison of interest. In our case, we have three experimental groups: `Basal`, `LP` and `ML`. So if we are to perform differential expression analysis, we are most likely interested in the differences between only two of the groups at a time. Contrast matrices let us specify which comparison we'd like to make, and are also represented as a matrix just like the design.
+Contrast matrices are companions to design matrices. They are used to specify the comparison of interest. In our case, we have three cell types: `Basal`, `LP` and `ML`. So if we are to perform differential expression analysis, we are most likely interested in the differences between only two of the groups at a time. Contrast matrices let us specify which comparison we'd like to make, and are also represented as a matrix just like the design.
 
-A contrast matrix can be made using the `makeContrasts()` function. Within this function, we specify the name of each specific contrast and the formula for that contrast. For example, the `BasalvsLP` contrast compares the difference between the `Basal` and `LP` groups. Note that the names of the phenotype groups must be written exactly as they are in the column names of our design matrix (see above).
+A contrast matrix can be made using the `makeContrasts()` function. Within this function, we specify the name of each specific contrast and the formula for that contrast. For example, the `BasalvsLP` contrast compares the difference between the `Basal` and `LP` groups. Note that the names of the cell types must be written exactly as they are in the column names of our design matrix (see above).
 
 In addition to the individual contrasts, the function must know about the design of the model. This is passed through the `levels` argument, which either accepts a matrix with the column names corresponding to levels of your experimental groups, or the levels themselves as a character vector. Here we first simplify the column names of our design matrix to make it easier to read. Then we create the contrast matrix using the `makeContrasts()` function.
 
@@ -382,7 +383,7 @@ The output of `voom()` (our variable `v`) is an `EList` object which contains th
 
 ### Fitting the linear model
 
-We are now ready to fit our linear model with `lmFit()`, which estimates the coefficients defined in our design matrix `design`. The resulting object, `vfit`, is an `MArrayLM` object. It contains information about our genes (the same data frame as `genes` from our `EList` object `v` above), the design matrix and a number of statistical outputs. Of most interest to us are the coefficients, stored in an element called `coefficients`. The first rows of this matrix are shown below. Each gene is a row and is labelled using its Entrez ID. Each column gives coefficients for each of our phenotype groups. These coefficients are weighted averages of the log-cpm of each gene in each group.
+We are now ready to fit our linear model with `lmFit()`, which estimates the coefficients defined in our design matrix `design`. The resulting object, `vfit`, is an `MArrayLM` object. It contains information about our genes (the same data frame as `genes` from our `EList` object `v` above), the design matrix and a number of statistical outputs. Of most interest to us are the coefficients, stored in an element called `coefficients`. The first rows of this matrix are shown below. Each gene is a row and is labelled using its Entrez ID. Each column gives coefficients for each of our cell types. These coefficients are weighted averages of the log-cpm of each gene in each group.
 
 ```{r}
 vfit <- lmFit(v)
