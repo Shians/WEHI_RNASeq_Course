@@ -146,7 +146,7 @@ The first step of our analysis is to filter out lowly expressed genes. There are
   - RNA-seq can be thought of as sampling. Measurement errors will occur simply due to the random nature of the sampling process. This problem affects low-abundance RNA species more because the relative error for small count values is larger than it would be for more highly abundant RNA species.
 - Genes that are very lowly expressed do not produce sufficient information to be useful for biological interpretation. For example, it is very hard to believe the biological significance of genes that have counts ranging from 0 to 3 across samples even if they come up as statistically significant.
 
-Removing these highly variable, lowly expressed genes increases your 'power' to detect differentially expressed genes [@bourgon2010], where 'power' is your ability to detect true positives. In testing for differential expression, a statistical test is conducted for each gene. When a high number of statistical tests are performed, a portion of them will be significant purely due to random chance. A common procedure to control for the number of false positives is to perform 'multiple testing correction' on the p-values. This adjusts the p-value in a way that reduces the number of false positives but comes at the cost of reduced power to detect true positives. If we filter out uninteresting, lowly expressed genes, we need to perform fewer statistical tests and reduce the impact that multiple testing adjustment has on detection power.
+Filtering out lowly expressed genes means fewer statistical tests, so less multiple testing correction and more power to detect DE genes [@bourgon2010]. 'Power' is your ability to detect true positives. DE analysis runs one test per gene, and with thousands of tests some will be significant purely by chance. 'Multiple testing correction' adjusts the p-values to control these false positives, at the cost of reduced power. The fewer tests we perform, the smaller that cost.
 
 The `edgeR` package provides the `filterByExpr()` function to automate gene filtering. By default, it aims to keep genes with a count of 10 or more, in at least as many samples as the smallest experimental group. In our experiment, there are three phenotype groups, each with three samples. Therefore we retain only genes that have 10 or more counts in three or more samples. The actual filtering is done on counts per million (cpm), to prevent bias against samples with small library sizes. This complex procedure is the reason why the package provides a function to perform the filtering for you.
 
@@ -208,10 +208,13 @@ These normalisation factors are close to 1 for all samples, suggesting minimal d
 
 ## Visualising the effect of normalisation
 
-To visualise the effect of TMM normalisation, we can plot the log-counts as a boxplot, and observe the effect of applying the normalisation. To create a boxplot of the log-counts, we can use `log(dge$counts + 0.5)` to create the log-count matrix. The addition of 0.5 is to avoid taking the log of zero. Then in order to use `ggplot2` for plotting, we must convert the matrix to a data frame. We can use the `as_tibble(rownames = "gene")` function to convert the matrix to a data frame where the row names are converted to a column called "gene". We can then use the `pivot_longer()` function to convert the data frame from wide format to long format, where each row represents a single observation. This is necessary for `ggplot2` to plot the data correctly.
+To see the effect of TMM normalisation, we plot each sample's distribution of log-counts as a boxplot, before and after normalisation. `ggplot2` needs the data in long format, with one row per observation, so we first reshape the count matrix.
 
 ```{r}
+# log-transform the raw counts (adding 0.5 avoids taking the log of zero),
+# then convert the matrix to a tibble, keeping row names as a "gene" column
 as_tibble(log(dge$counts + 0.5), rownames = "gene") %>%
+  # reshape from wide to long: one row per gene-sample pair
   pivot_longer(
     where(is.numeric),
     names_to = "sample", values_to = "expression"
@@ -343,7 +346,7 @@ contr_matrix <- makeContrasts(
 contr_matrix
 ```
 
-Note that the way that you set up the equation in the matrix will determine the interpretation of the log-fold-change calculated later, as well as the meaning of up-regulated and down-regulated genes. For example, the contrast `Basal - LP` will give a positive log-fold-change for genes that are up-regulated in the `Basal` group compared to the `LP` group. If we had set up the contrast as `LP - Basal`, then the opposite would be true, and we would get a negative log-fold-change for genes that are up-regulated in the `Basal` group compared to the `LP` group.
+**The order of the contrast sets the sign: for `Basal - LP`, a positive log-fold-change means higher expression in Basal.** Had we written `LP - Basal`, genes up-regulated in Basal would instead have a negative log-fold-change.
 
 ::: {.callout-tip collapse="true" title="Going deeper: why the columns sum to zero"}
 The numbers in each column of a contrast matrix sum to 0. Each contrast compares groups against each other, so the weights on one side balance those on the other.
@@ -387,7 +390,7 @@ vfit <- contrasts.fit(vfit, contrasts = contr_matrix)
 head(vfit$coefficients)
 ```
 
-With these values we essentially want to know whether or not the difference in values is significantly different from 0. If the difference is not significantly different from 0, then we have failed to establish a difference in the expression of a particular gene between two groups. If the difference is significantly greater than 0, then we have up-regulation in the first group of the contrast, and if the difference is significantly less than 0, then we have down-regulation in the first group of the contrast.
+A difference significantly greater than 0 means the gene is up-regulated in the first group of the contrast; significantly less than 0 means it is down-regulated. If the difference is not significantly different from 0, we have failed to establish a difference in expression between the two groups.
 
 ## Statistical testing
 
@@ -455,11 +458,10 @@ If you haven't already, install the package:
 install.packages("pheatmap")
 ```
 
-The data we will use for the heatmap is going to be the log-cpm expression values of the top differentially expressed genes. We can use the `topTable()` function to get the top differentially expressed genes for each contrast. We can then use the `cpm()` function to get the expression values of these genes. We will take the top 50 genes from each contrast and combine them into a single data frame. We will then extract the expression values for these genes from the full expression matrix. For more interpretable labels, we will use the gene symbols as the row names of the expression matrix.
-
-Note that by default the `ENTREZID` column is encoded as a numeric value, so to use it to subset our expression matrix we need to convert it to a character vector in order to select the matching IDs rather than trying to select the numerical rows of the data.
+We take the top 50 DE genes from each contrast, combine them, and plot their log-cpm values, labelled with gene symbols.
 
 ```{r}
+# combine the top 50 genes from each contrast, removing duplicates
 top_genes <- bind_rows(
   topTable(efit, coef = "BasalvsLP", n = 50),
   topTable(efit, coef = "BasalvsML", n = 50),
@@ -468,29 +470,33 @@ top_genes <- bind_rows(
   select(ENTREZID, SYMBOL, TXCHROM) %>%
   distinct()
 
+# extract log-cpm values for these genes. ENTREZID is numeric, so convert it
+# to character to select rows by ID rather than by position
 top_gene_expr <- cpm(dge, log = TRUE)[as.character(top_genes$ENTREZID), ]
+# label rows with gene symbols for readability
 rownames(top_gene_expr) <- top_genes$SYMBOL
 ```
 
-To create the heatmap we will use the `pheatmap()` function with the expression matrix. We will add in arguments to provide our own colour scale, scale the data along the rows with a z-score, add sample annotation, and cluster the data by rows and columns. We will also add in the option to show the row names and column names, and set the font size of the row names. You can experiment with removing each of these options to see how they affect the heatmap, as well as investigate additional options in the `pheatmap()` documentation.
+We draw the heatmap with `pheatmap()`, scaling each gene to a z-score so that patterns across samples are comparable between genes. Try removing each option to see how it affects the heatmap, and explore further options in the `pheatmap()` documentation.
 
 ```{r}
 library(pheatmap)
 
+# sample annotation: colour bar showing each sample's group
 sample_anno <- dge$samples %>%
   select(group)
 
 heatmap <- pheatmap(
   top_gene_expr,
-  color = colorRampPalette(c("blue", "white", "red"))(100),
-  scale = "row",
-  annotation_col = sample_anno,
+  color = colorRampPalette(c("blue", "white", "red"))(100), # custom colour scale
+  scale = "row", # z-score each gene across samples
+  annotation_col = sample_anno, # add sample group annotation
   border_color = NA,
-  cluster_rows = TRUE,
-  cluster_cols = TRUE,
+  cluster_rows = TRUE, # cluster genes
+  cluster_cols = TRUE, # cluster samples
   show_rownames = TRUE,
   show_colnames = TRUE,
-  fontsize_row = 6
+  fontsize_row = 6 # small font so gene labels fit
 )
 ```
 
