@@ -639,7 +639,7 @@ We see that some labels are very hard to read because they overlap, so we can us
 library(ggrepel)
 ggplot(mds_tibble, aes(x = x, y = y, col = group)) +
   geom_point() +
-  geom_text_repel(aes(label = sample)) +
+  geom_text_repel(aes(label = sample), show.legend = FALSE) +
   labs(
     x = paste0("Leading logFC dim 1 ", "(", dim1_var_explained, "%)"),
     y = paste0("Leading logFC dim 2 ", "(", dim2_var_explained, "%)")
