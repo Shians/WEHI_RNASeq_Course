@@ -190,10 +190,10 @@ TMM calculates the scaling factor for each library using the following steps:
 
 Subsequent steps in this analysis will use log-cpm values, calculated using the normalisation factors to scale each library size.
 
-We can calculate the normalisation factors, specifying that we want to use the `"TMM"` method:
+We can calculate the normalisation factors with `normLibSizes()`, specifying that we want to use the `"TMM"` method:
 
 ```{r}
-dge <- calcNormFactors(dge, method = "TMM")
+dge <- normLibSizes(dge, method = "TMM")
 ```
 
 This function calculates the normalisation factors for each library (sample) and puts this information in the `samples` data frame. Note that it takes `dge` (our `DGEList` object) as input and returns a `DGEList` object as well.
@@ -292,7 +292,7 @@ keep <- filterByExpr(dge)
 dge <- dge[keep, , keep.lib.sizes = FALSE]
 
 # normalise the data for library size and RNA composition
-dge <- calcNormFactors(dge, method = "TMM")
+dge <- normLibSizes(dge, method = "TMM")
 ```
 
 ## Linear modelling
