@@ -19,7 +19,7 @@ options(readr.show_col_types = FALSE)
 
 Which genes are differentially expressed between three cell types in the mouse mammary gland? In this workshop we answer that question for basal, luminal progenitor (LP) and mature luminal (ML) cells. The cells were sorted from the mammary glands of female virgin mice, with three replicates per cell type (nine samples), and sequenced on Illumina RNA-seq platforms. The data comes from the `RNAseq123` workflow.
 
-By the end you will have a table of differentially expressed (DE) genes for each pairwise comparison, an MA plot and a heatmap of the top DE genes, all saved to an `output` folder.
+By the end you will have a table of differentially expressed (DE) genes and an MA plot for each pairwise comparison, plus a heatmap of the top DE genes, all saved to an `output` folder.
 
 To get there, we follow the [limma-voom workflow](https://f1000research.com/articles/5-1408):
 
@@ -258,6 +258,10 @@ plotMDS(dge, labels = group)
 ```
 
 This shows us that the phenotype groups tend to cluster together, meaning that the gene expression profiles are similar for samples within a phenotype group. The 'Basal' type samples are quite close together while the 'LP' (luminal progenitor) and 'ML' (mature luminal) type samples are further apart, signifying that their expression profiles are more variable.
+
+::: {.callout-tip title="Checkpoint"}
+The next chunk recreates every object we have built so far, from loading the packages to normalising the data. Run it if you are starting from this point or have lost your objects; otherwise you can skip it.
+:::
 
 ```{r}
 # load required packages
@@ -512,16 +516,53 @@ The samples cluster by cell type, so the three replicates of each group sit next
 
 ## Saving all the results
 
-Now that we have produced a series of plots and the top genes table, we can save these files to a directory. These figures may form the basis for publication figures, and the results table can be partially presented as a result, or the full table can be included as a supplementary file.
+Now that we have the DE results, the MA plots and the heatmap, we can save them to an `output` folder. The code below writes the full top table for each of the three contrasts to a CSV file, saves an MA plot for each contrast and saves the heatmap. These figures may form the basis for publication figures, and the full tables can be included as supplementary files.
 
 ```{r, warning=FALSE}
-dir.create("output")
+dir.create("output", showWarnings = FALSE)
 
-write_csv(top, "output/top_genes_BasalvsLP.csv")
+# save the full top table for each contrast
+write_csv(topTable(efit, coef = "BasalvsLP", n = Inf), "output/top_genes_BasalvsLP.csv")
+write_csv(topTable(efit, coef = "BasalvsML", n = Inf), "output/top_genes_BasalvsML.csv")
+write_csv(topTable(efit, coef = "LPvsML", n = Inf), "output/top_genes_LPvsML.csv")
+
+# save the MA plot for each contrast
+png("output/ma_plot_BasalvsLP.png", width = 7, height = 6, units = "in", res = 300)
+plotMA(efit, coef = "BasalvsLP", status = dt[, "BasalvsLP"])
+dev.off()
+
+png("output/ma_plot_BasalvsML.png", width = 7, height = 6, units = "in", res = 300)
+plotMA(efit, coef = "BasalvsML", status = dt[, "BasalvsML"])
+dev.off()
+
+png("output/ma_plot_LPvsML.png", width = 7, height = 6, units = "in", res = 300)
+plotMA(efit, coef = "LPvsML", status = dt[, "LPvsML"])
+dev.off()
+
+# save the heatmap
 ggsave("output/heatmap.png", heatmap$gtable, height = 10, width = 7)
 ```
 
-With that we have come to the conclusion of the RNA-seq analysis and this course. You have now learned how to use various `tidyverse` packages to operate on data and create publication-quality figures. You have also learned how to use the `limma` and `edgeR` packages to perform differential expression analysis on RNA-seq data. You should now be able to apply these skills to perform analysis on your own data.
+## Recap
+
+We have used limma-voom to find the genes that are differentially expressed between each pair of the three cell types: basal, LP and ML. The pipeline, with the key function for each step, was:
+
+-   Build the count object with `readDGE()` or `DGEList()`.
+-   Remove lowly expressed genes with `filterByExpr()`.
+-   Normalise for library size and RNA composition with `normLibSizes()`.
+-   Check sample relationships with `plotMDS()`.
+-   Set up the design and comparisons with `model.matrix()` and `makeContrasts()`.
+-   Model the mean-variance relationship with `voom()`.
+-   Fit the linear model with `lmFit()` and `contrasts.fit()`.
+-   Compute moderated statistics with `eBayes()`.
+-   Summarise and extract results with `decideTests()` and `topTable()`.
+
+### Applying this to your own data
+
+-   Read in your counts matrix and build the object with `DGEList()`.
+-   Set up `group` and the design matrix to match your experiment.
+-   Choose contrasts that answer your own questions.
+-   For more complex designs, see the `limma` User's Guide (`help("limma")`) and the RNAseq123 workflow.
 
 # Extra content
 
@@ -668,7 +709,7 @@ ma_plot <- ma_plot_data_fct %>%
 
 ma_plot
 
-ggsave("output/ma_plot_BasalvsLP.png", ma_plot)
+ggsave("output/ma_plot_ggplot_BasalvsLP.png", ma_plot)
 ```
 
 ## Volcano plot
