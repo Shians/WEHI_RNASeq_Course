@@ -359,7 +359,7 @@ window.Quarto = {
 <span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <div class="callout callout-style-default callout-note callout-titled" title="A brief detour to factors">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-2-contents" aria-controls="callout-2" aria-expanded="true" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -368,7 +368,7 @@ window.Quarto = {
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-2" class="callout-2-contents callout-collapse collapse">
+<div id="callout-2" class="callout-2-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
 <p>When we declared the <code>group</code> variable, we used a factor. Factors are a special data type used to encode categorical variables. They have several useful properties compared with regular character vectors:</p>
 <ul>
@@ -480,7 +480,7 @@ FALSE  TRUE
 </ol>
 <p>RNA composition can be accounted for by using more sophisticated normalisation methodologies. We will use ‘trimmed mean of M-values’ (TMM), which estimates relative RNA levels from RNA-seq data<span class="citation" data-cites="robinson2010"><sup><a href="#ref-robinson2010" role="doc-biblioref">3</a></sup></span>. Under the assumption that most genes are not differentially expressed, TMM calculates a library size scaling factor for each library (sample) from the genes that remain after trimming those with the most extreme log-fold-changes and expression levels.</p>
 <div class="callout callout-style-default callout-tip callout-titled" title="Going deeper: how TMM works">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-4-contents" aria-controls="callout-4" aria-expanded="true" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -489,7 +489,7 @@ FALSE  TRUE
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-4" class="callout-4-contents callout-collapse collapse">
+<div id="callout-4" class="callout-4-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
 <p>TMM calculates the scaling factor for each library using the following steps:</p>
 <ol type="1">
@@ -717,7 +717,7 @@ Levels  BasalvsLP BasalvsML LPvsML
 </div>
 <p><strong>The order of the contrast sets the sign: for <code>Basal - LP</code>, a positive log-fold-change means higher expression in Basal.</strong> Had we written <code>LP - Basal</code>, genes up-regulated in Basal would instead have a negative log-fold-change.</p>
 <div class="callout callout-style-default callout-tip callout-titled" title="Going deeper: why the columns sum to zero">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-6-contents" aria-controls="callout-6" aria-expanded="true" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -726,7 +726,7 @@ Levels  BasalvsLP BasalvsML LPvsML
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-6" class="callout-6-contents callout-collapse collapse">
+<div id="callout-6" class="callout-6-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
 <p>The numbers in each column of a contrast matrix sum to 0. Each contrast compares groups against each other, so the weights on one side balance those on the other.</p>
 </div>
@@ -797,7 +797,7 @@ Levels  BasalvsLP BasalvsML LPvsML
 <h2 data-number="2.11" class="anchored" data-anchor-id="statistical-testing"><span class="header-section-number">2.11</span> Statistical testing</h2>
 <p>To actually test if the values are significantly different from 0, we use the <code>eBayes()</code> function to compute a moderated t-statistic for each gene, given a fitted linear model. ‘Moderated’ refers to empirical Bayes moderation, which borrows information across genes to obtain more accurate measures of variability for each gene. This also increases our power to detect differentially expressed genes.</p>
 <div class="callout callout-style-default callout-tip callout-titled" title="Going deeper: other statistics from eBayes()">
-<div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="false" aria-label="Toggle callout">
+<div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-7-contents" aria-controls="callout-7" aria-expanded="true" aria-label="Toggle callout">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
@@ -806,7 +806,7 @@ Levels  BasalvsLP BasalvsML LPvsML
 </div>
 <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end"><i class="callout-toggle"></i></div>
 </div>
-<div id="callout-7" class="callout-7-contents callout-collapse collapse">
+<div id="callout-7" class="callout-7-contents callout-collapse collapse show">
 <div class="callout-body-container callout-body">
 <p>As well as moderated t-statistics, <code>eBayes()</code> computes moderated F-statistics, which test all contrasts at once, and the log-odds of differential expression for each gene. The log-odds appears as the <code>B</code> column in the output of <code>topTable()</code>.</p>
 </div>
@@ -1019,7 +1019,7 @@ Up          4817      4778   2102</code></pre>
 <pre><code>An object of class MDS
 $eigen.values
 [1]  6.844419e+01  1.154413e+01  3.790044e+00  2.994025e+00  2.021565e+00
-[6]  1.613173e+00  1.202805e+00  1.094072e+00 -3.038972e-15
+[6]  1.613173e+00  1.202805e+00  1.094072e+00 -2.379073e-16
 
 $eigen.vectors
             [,1]        [,2]        [,3]         [,4]        [,5]        [,6]
@@ -1867,7 +1867,7 @@ $y
 <span id="cb61-94"><a href="#cb61-94" aria-hidden="true" tabindex="-1"></a>)</span>
 <span id="cb61-95"><a href="#cb61-95" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb61-96"><a href="#cb61-96" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb61-97"><a href="#cb61-97" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="true" title="A brief detour to factors"}</span>
+<span id="cb61-97"><a href="#cb61-97" aria-hidden="true" tabindex="-1"></a>::: {.callout-note collapse="false" title="A brief detour to factors"}</span>
 <span id="cb61-98"><a href="#cb61-98" aria-hidden="true" tabindex="-1"></a>When we declared the <span class="in">`group`</span> variable, we used a factor. Factors are a special data type used to encode categorical variables. They have several useful properties compared with regular character vectors:</span>
 <span id="cb61-99"><a href="#cb61-99" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb61-100"><a href="#cb61-100" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>They allow you to specify the order of the levels.</span>
@@ -1961,7 +1961,7 @@ $y
 <span id="cb61-192"><a href="#cb61-192" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb61-193"><a href="#cb61-193" aria-hidden="true" tabindex="-1"></a>RNA composition can be accounted for by using more sophisticated normalisation methodologies. We will use 'trimmed mean of M-values' (TMM), which estimates relative RNA levels from RNA-seq data <span class="co">[</span><span class="ot">@robinson2010</span><span class="co">]</span>. Under the assumption that most genes are not differentially expressed, TMM calculates a library size scaling factor for each library (sample) from the genes that remain after trimming those with the most extreme log-fold-changes and expression levels.</span>
 <span id="cb61-194"><a href="#cb61-194" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb61-195"><a href="#cb61-195" aria-hidden="true" tabindex="-1"></a>::: {.callout-tip collapse="true" title="Going deeper: how TMM works"}</span>
+<span id="cb61-195"><a href="#cb61-195" aria-hidden="true" tabindex="-1"></a>::: {.callout-tip collapse="false" title="Going deeper: how TMM works"}</span>
 <span id="cb61-196"><a href="#cb61-196" aria-hidden="true" tabindex="-1"></a>TMM calculates the scaling factor for each library using the following steps:</span>
 <span id="cb61-197"><a href="#cb61-197" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb61-198"><a href="#cb61-198" aria-hidden="true" tabindex="-1"></a><span class="ss">1.  </span>calculate the gene expression log-fold-changes and absolute expression values for pairwise samples (selecting one sample from the experiment as a reference)</span>
@@ -2133,7 +2133,7 @@ $y
 <span id="cb61-382"><a href="#cb61-382" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb61-383"><a href="#cb61-383" aria-hidden="true" tabindex="-1"></a>**The order of the contrast sets the sign: for `Basal - LP`, a positive log-fold-change means higher expression in Basal.** Had we written <span class="in">`LP - Basal`</span>, genes up-regulated in Basal would instead have a negative log-fold-change.</span>
 <span id="cb61-384"><a href="#cb61-384" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb61-385"><a href="#cb61-385" aria-hidden="true" tabindex="-1"></a>::: {.callout-tip collapse="true" title="Going deeper: why the columns sum to zero"}</span>
+<span id="cb61-385"><a href="#cb61-385" aria-hidden="true" tabindex="-1"></a>::: {.callout-tip collapse="false" title="Going deeper: why the columns sum to zero"}</span>
 <span id="cb61-386"><a href="#cb61-386" aria-hidden="true" tabindex="-1"></a>The numbers in each column of a contrast matrix sum to 0. Each contrast compares groups against each other, so the weights on one side balance those on the other.</span>
 <span id="cb61-387"><a href="#cb61-387" aria-hidden="true" tabindex="-1"></a>:::</span>
 <span id="cb61-388"><a href="#cb61-388" aria-hidden="true" tabindex="-1"></a></span>
@@ -2183,7 +2183,7 @@ $y
 <span id="cb61-438"><a href="#cb61-438" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb61-439"><a href="#cb61-439" aria-hidden="true" tabindex="-1"></a>To actually test if the values are significantly different from 0, we use the <span class="in">`eBayes()`</span> function to compute a moderated t-statistic for each gene, given a fitted linear model. 'Moderated' refers to empirical Bayes moderation, which borrows information across genes to obtain more accurate measures of variability for each gene. This also increases our power to detect differentially expressed genes.</span>
 <span id="cb61-440"><a href="#cb61-440" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb61-441"><a href="#cb61-441" aria-hidden="true" tabindex="-1"></a>::: {.callout-tip collapse="true" title="Going deeper: other statistics from eBayes()"}</span>
+<span id="cb61-441"><a href="#cb61-441" aria-hidden="true" tabindex="-1"></a>::: {.callout-tip collapse="false" title="Going deeper: other statistics from eBayes()"}</span>
 <span id="cb61-442"><a href="#cb61-442" aria-hidden="true" tabindex="-1"></a>As well as moderated t-statistics, <span class="in">`eBayes()`</span> computes moderated F-statistics, which test all contrasts at once, and the log-odds of differential expression for each gene. The log-odds appears as the <span class="in">`B`</span> column in the output of <span class="in">`topTable()`</span>.</span>
 <span id="cb61-443"><a href="#cb61-443" aria-hidden="true" tabindex="-1"></a>:::</span>
 <span id="cb61-444"><a href="#cb61-444" aria-hidden="true" tabindex="-1"></a></span>
