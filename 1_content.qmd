@@ -14,6 +14,7 @@ library(knitr)
 library(kableExtra)
 options(readr.show_col_types = FALSE)
 ```
+
 # RNA-seq workshop
 
 In this workshop we will run through the basic steps for analysing a simple RNA-seq experiment using the [limma-voom workflow](https://f1000research.com/articles/5-1408). This includes:
@@ -25,9 +26,9 @@ In this workshop we will run through the basic steps for analysing a simple RNA-
 - fitting gene-wise linear models (with empirical Bayes moderation to more accurately estimate gene-wise variability)
 - performing statistical testing for differential expression
 
-The aim of this workshop is to give you experience with a real-world RNA-seq analysis, and making extensive use of an external library. We will not cover the statistics in any depth. Instead, the goal is to understand how to construct data structures required for specific packages and how to use the functions in those packages to perform the analysis.
+The aim of this workshop is to give you experience with a real-world RNA-seq analysis while making extensive use of an external library. We will not cover the statistics in any depth. Instead, the goal is to understand how to construct data structures required for specific packages and how to use the functions in those packages to perform the analysis.
 
-Much of the material here are explained in greater detail in the limma user's guide. You can view this by typing `help("limma")` and following the links.
+Much of the material here is explained in greater detail in the limma user's guide. You can view this by typing `help("limma")` and following the links.
 
 ## Data files
 
@@ -136,9 +137,9 @@ Now we have a data object that can be used for downstream analysis.
 
 ## Filtering
 
-The first step of our analysis is to filter out lowly expressed genes. There are two main problems with low abundant genes:
+The first step of our analysis is to filter out lowly expressed genes. There are two main problems with low-abundance genes:
 
-- Technical variation is more problematic for low abundance genes. This variation is thought to be due to two factors; insufficient mixing and low sampling fraction [@mcintyre2011].
+- Technical variation is more problematic for low abundance genes. This variation is thought to be due to two factors: insufficient mixing and low sampling fraction [@mcintyre2011].
   - Insufficient mixing of solutions during library preparation can result in uneven distribution of reads.
   - RNA-seq can be thought of as sampling. Measurement errors will occur simply due to the random nature of the sampling process. This problem affects lowly abundant RNA species more because the relative error for small count values is larger than it would be for more highly abundant RNA species.
 - Genes that are very lowly expressed do not produce sufficient information to be useful for biological interpretation. For example, it is very hard to believe the biological significance of genes that have counts ranging from 0 to 3 across samples even if they come up as statistically significant.
@@ -147,7 +148,7 @@ Removing these highly variable, lowly expressed genes increases your 'power' to 
 
 The `edgeR` package provides the `filterByExpr()` function to automate gene filtering. By default, it aims to keep genes with a count of 10 or more, in at least as many samples as the smallest experimental group. In our experiment, there are 3 phenotype groups each with 3 samples. Therefore we retain only genes that have 10 or more counts in 3 or more samples. The actual filtering is done on counts per million, to prevent bias against samples with small library sizes. This complex procedure is the reason why the package provides a function to perform the filtering for you.
 
-The output of this function is a vector of logicals, indicating which genes (rows) should be kept and which filtered.
+The output of this function is a vector of logicals, indicating which genes (rows) should be kept and which should be filtered out.
 
 ```{r}
 keep <- filterByExpr(dge)
@@ -213,7 +214,7 @@ as_tibble(log(dge$counts + 0.5), rownames = "gene") %>%
   geom_boxplot()
 ```
 
-We can compare this to the cpm values which when calculated using the `cpm()` function, automatically applies normalisation factors if they are present.
+We can compare this to the cpm values. The `cpm()` function automatically applies normalisation factors if they are present.
 
 ```{r}
 as_tibble(cpm(dge, log = TRUE), rownames = "gene") %>%
@@ -319,7 +320,7 @@ There are 9 rows, one for each sample. Along the columns are the names of the gr
 
 Contrast matrices are companions to design matrices. They are used to specify the comparison of interest. In our case, we have three experimental groups: `Basal`, `LP` and `ML`. So if we are to perform differential expression analysis, we are most likely interested in the differences between only two of the groups at a time. Contrast matrices let us specify which comparison we'd like to make, and are also represented as a matrix just like the design.
 
-A contrast matrix can be made using the `makeContrasts()` function. Within this function, we specify the name of each specific contrast and the formula for that contrast. For example, the `BasalvsLP` contrasts compares the difference between the `Basal` and `LP` groups. Note that the name of the phenotype groups must be written exactly as they are in the column names of our design matrix (see above).
+A contrast matrix can be made using the `makeContrasts()` function. Within this function, we specify the name of each specific contrast and the formula for that contrast. For example, the `BasalvsLP` contrast compares the difference between the `Basal` and `LP` groups. Note that the names of the phenotype groups must be written exactly as they are in the column names of our design matrix (see above).
 
 In addition to the individual contrasts, the function must know about the design of the model. This is passed through the `levels` argument, which either accepts a matrix with the column names corresponding to levels of your experimental groups, or the levels themselves as a character vector. Here we first simplify the column names of our design matrix to make it easier to read. Then we create the contrast matrix using the `makeContrasts()` function.
 
@@ -340,11 +341,11 @@ There are two things to note about a contrast matrix. First, the sum of the numb
 
 ### Variance modelling with voom
 
-We are now ready to fit our linear models. `limma` fits linear models to the data with the assumption that the underlying data is normally distributed. Count data is generally not normally distributed, but log transforming count data gives it a roughly normal distribution sufficient for linear models to work well. To do this, limma transforms the raw count data to log-cpm using library sizes and the normalisation factors we calculated previously.
+We are now ready to fit our linear models. `limma` fits linear models to the data with the assumption that the underlying data is normally distributed. Count data is generally not normally distributed, but log transforming count data gives it a roughly normal distribution sufficient for linear models to work well. To do this, `limma` transforms the raw count data to log-cpm using library sizes and the normalisation factors we calculated previously.
 
 In addition to the normalisation steps, the limma-voom pipeline uses the `voom()` function to generate weights for the individual observations based on a modelled mean-variance relationship. The mean-variance relationship is used to estimate the variance of each individual observation of sample-gene expression, and by applying these weights to the linear modelling step, it helps the data better meet the assumptions of the linear model and results in more accurate statistical inferences.
 
-The `voom()` function takes as arguments, our `DGEList` object and our design matrix. It also optionally outputs a plot of the mean-variance relationship of our data, called the 'voom-plot'.
+The `voom()` function takes as arguments our `DGEList` object and our design matrix. It also optionally outputs a plot of the mean-variance relationship of our data, called the 'voom-plot'.
 
 ```{r}
 v <- voom(dge, design, plot = TRUE)
@@ -362,7 +363,7 @@ The voom plot shows the mean-variance relationship of the data. The x-axis is th
 
 ### Fitting the linear model
 
-We are now ready to fit our linear model with `lmFit()`, which calculates coefficients we defined in our design matrix `design`. The resulting object, `vfit` is a `MArrayLM` object. It contains information about our genes (the same data frame as `genes` from our `EList` object `v` above), the design matrix and a number of statistical outputs. Of most interest to us is the coefficients, stored in an element called `coefficients`. The first rows of this matrix are shown below. Each gene is a row and is labelled using the EntrezID. Each column gives coefficients for each of our phenotype groups. These coefficients are weighted averages of the log-cpm of each gene in each group.
+We are now ready to fit our linear model with `lmFit()`, which calculates coefficients we defined in our design matrix `design`. The resulting object, `vfit`, is an `MArrayLM` object. It contains information about our genes (the same data frame as `genes` from our `EList` object `v` above), the design matrix and a number of statistical outputs. Of most interest to us are the coefficients, stored in an element called `coefficients`. The first rows of this matrix are shown below. Each gene is a row and is labelled using the EntrezID. Each column gives coefficients for each of our phenotype groups. These coefficients are weighted averages of the log-cpm of each gene in each group.
 
 ```{r}
 vfit <- lmFit(v)
@@ -409,8 +410,8 @@ It outputs a data frame with the following information:
 -   `logFC` - the log2-fold-change of the contrast.
 -   `AveExpr` - the average log2 expression of that gene.
 -   `t` - moderated t-statistic.
--   `P.Value` - p value.
--   `adj.P.Val` - adjusted p value.
+-   `P.Value` - p-value.
+-   `adj.P.Val` - adjusted p-value.
 -   `B` - log-odds that the gene is differentially expressed.
 
 ```{r}
@@ -434,7 +435,7 @@ plotMA(efit, coef = 1, status = dt[, "BasalvsLP"])
 
 Finally we can create a heatmap of the differentially expressed genes. The heatmap is a useful way to visualise the expression of the differentially expressed genes across the samples. We can use the `pheatmap` package to create the heatmap.
 
-First we need to install the package if you haven't already
+If you haven't already, install the package:
 
 ```{r, eval = FALSE}
 install.packages("pheatmap")
@@ -560,7 +561,7 @@ ggplot(mds_tibble, aes(x = x, y = y, col = group)) +
 
 We see that some labels are very hard to read due to the overlapping, so we can use the `ggrepel` package to fix this. The `ggrepel` package creates labels that repel each other in order to avoid overlap. It's a good idea to use it in conjunction with `geom_point()` in order to keep track of exact coordinates of the data points.
 
-First we need to install the package if you haven't already
+If you haven't already, install the package:
 
 ```{r, eval = FALSE}
 install.packages("ggrepel")
@@ -591,7 +592,7 @@ ma_plot_data <- tibble(
 )
 ```
 
-With our tibble prepared, we can use `ggplot2` to create the plot as we have done before
+With our tibble prepared, we can use `ggplot2` to create the plot as we have done before:
 
 ```{r}
 ma_plot_data %>%
@@ -642,7 +643,7 @@ ggsave("output/ma_plot_BasalvsLP.png", ma_plot)
 
 ## Volcano Plot
 
-Since we have the tibble of the data prepared, we can also choose to create an alternative plot called a volcano plot, which is also very popular in RNA-seq analysis. The volcano plot is a scatter plot of the negative log10 p-value against the log2 fold-change. This plot is useful for visualising the significance of the differentially expressed genes.
+Since we have the tibble of the data prepared, we can also choose to create an alternative plot called a volcano plot, which is also very popular in RNA-seq analysis. The volcano plot is a scatter plot of the negative log10 p-value against the log2-fold-change. This plot is useful for visualising the significance of the differentially expressed genes.
 
 ```{r}
 volcano_plot <- ma_plot_data_fct %>%
