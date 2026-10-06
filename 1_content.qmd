@@ -27,11 +27,11 @@ In this workshop we will run through the basic steps for analysing a simple RNA-
 
 The aim of this workshop is to give you experience with a real-world RNA-seq analysis, and making extensive use of an external library. We will not cover the statistics in any depth. Instead, the goal is to understand how to construct data structures required for specific packages and how to use the functions in those packages to perform the analysis.
 
-Much of the materials here are explained in greater detail in the limma user's guide. You can view this by typing `help("limma")` and following the links.
+Much of the material here are explained in greater detail in the limma user's guide. You can view this by typing `help("limma")` and following the links.
 
 ## Data files
 
-You can download and unzip the files using the following commands
+You can download and unzip the files using the following commands:
 
 ```{r}
 download.file("https://github.com/Shians/BaseR_Intro/raw/master/data/workshop_data.zip", "workshop_data.zip")
@@ -39,9 +39,9 @@ unzip("workshop_data.zip", exdir = "data")
 unzip("data/Ses3_counts.zip", exdir = "data/counts")
 ```
 
-# R Packages
+## R Packages
 
-The packages required for this workshop can be downloaded by the following commands
+The packages required for this workshop can be installed with the following commands:
 
 ```{r}
 #| eval: false
@@ -53,7 +53,7 @@ BiocManager::install("RNAseq123")
 
 ## Loading in read count data and annotation
 
-The data we are looking at comes from three cell populations (basal, luminal progenitor (LP) and mature luminal (ML)) sorted from the mammary glands of female virgin mice, each profiled in triplicate. These samples have been sequenced using Illumina RNAseq platforms and we will be using the `edgeR` package to analyse the data.
+The data we are looking at comes from three cell populations (basal, luminal progenitor (LP) and mature luminal (ML)) sorted from the mammary glands of female virgin mice, each profiled in triplicate. These samples have been sequenced using Illumina RNA-seq platforms and we will be using the `edgeR` package to analyse the data.
 
 To use the `edgeR` package we first need to construct a `DGEList` object. This object contains 3 key pieces of data:
 
@@ -86,6 +86,7 @@ samplenames <- c(
 ## A brief detour to factors
 
 Note that when we declared the `group` variable, we used factors. Factors are a special data type that is used to encode categorical variables. They have multiple useful properties in comparison to regular character vectors:
+
 - They allow you to specify the order of the levels.
 - They are stored as integers but displayed as labels.
 - They encode all the valid levels of the factor, even if they are not present in the data.
@@ -139,7 +140,7 @@ The first step of our analysis is to filter out lowly expressed genes. There are
 
 - Technical variation is more problematic for low abundance genes. This variation is thought to be due to two factors; insufficient mixing and low sampling fraction [@mcintyre2011].
   - Insufficient mixing of solutions during library preparation can result in uneven distribution of reads.
-  - RNA sequencing can be thought of as sampling. Measurement errors will occur simply due to the random nature of the sampling process. This problem affects lowly abundant RNA species more because the relative error for small count values is larger than it would be for more highly abundant RNA species.
+  - RNA-seq can be thought of as sampling. Measurement errors will occur simply due to the random nature of the sampling process. This problem affects lowly abundant RNA species more because the relative error for small count values is larger than it would be for more highly abundant RNA species.
 - Genes that are very lowly expressed do not produce sufficient information to be useful for biological interpretation. For example, it is very hard to believe the biological significance of genes that have counts ranging from 0 to 3 across samples even if they come up as statistically significant.
 
 Removing these highly variable, lowly expressed genes increases your 'power' to detect differentially expressed genes [@bourgon2010], where 'power' is your ability to detect true positives. In testing for differential expression, a statistical test is conducted for each gene. When a high number of statistical tests are performed, a portion of them will be significant purely due to random chance. A common procedure to control for the number of false positives is to perform 'multiple testing correction' on the p-values. This adjusts the p-value in a way that reduces the number of false positives but comes at the cost of reduced power to detect true positives. If we filter out uninteresting, lowly expressed genes, we need to perform fewer statistical tests and reduce the impact that multiple testing adjustment has on detection power.
@@ -176,7 +177,7 @@ Sequencing depth is accounted for by calculating the counts per million (cpm). T
 
 RNA composition can be accounted for by using more sophisticated normalisation methodologies. We will use 'trimmed mean of M-values' (TMM), which estimates relative RNA levels from RNA-seq data [@robinson2010]. Under the assumption that most genes are not differentially expressed, TMM calculates a library size scaling factor for each library (sample). This is done using the following steps:
 
-1.  calculate the gene expression log fold changes and absolute expression values for pair-wise samples (selecting one sample from the experiment as a reference)
+1.  calculate the gene expression log-fold-changes and absolute expression values for pair-wise samples (selecting one sample from the experiment as a reference)
 2.  remove the genes with the highest and lowest fold changes and absolute expression values
 3.  take a weighted mean of the remaining genes (where the weight is the inverse of the approximate asymptotic variances). This gives the normalisation factor for each library (sample)
 
@@ -188,7 +189,7 @@ We can calculate the normalisation factors, specifying that we want to use the `
 dge <- calcNormFactors(dge, method = "TMM")
 ```
 
-This function calculates the normalisation factors for each library (sample) and puts this information in the `samples` data frame. Note that it takes dge (our `DGEList` object as input) and returns a `DGEList` object as well.
+This function calculates the normalisation factors for each library (sample) and puts this information in the `samples` data frame. Note that it takes `dge` (our `DGEList` object) as input and returns a `DGEList` object as well.
 
 Let's take a look at our normalisation factors:
 
@@ -278,7 +279,7 @@ dge$genes <- read_tsv("data/Ses3_geneAnnot.tsv")
 
 # filter lowly expressed genes
 keep <- filterByExpr(dge)
-dge <- dge[keep, ]
+dge <- dge[keep, , keep.lib.sizes = FALSE]
 
 # normalise the data for library size and RNA composition
 dge <- calcNormFactors(dge, method = "TMM")
@@ -312,7 +313,7 @@ design <- model.matrix(~0 + group, data = dge$samples)
 design
 ```
 
-There are 9 rows, one for each sample. Along the columns are the names of the groups. The values in the cells denote membership of the particular sample for a particular group, as our groups in this case are mutually exclusive, each row contains only a single 1 to denote membership in a single group.
+There are 9 rows, one for each sample. Along the columns are the names of the groups. The values in the cells denote membership of the particular sample for a particular group. As our groups in this case are mutually exclusive, each row contains only a single 1 to denote membership in a single group.
 
 ### Contrasts
 
@@ -339,7 +340,7 @@ There are two things to note about a contrast matrix. First, the sum of the numb
 
 ### Variance modelling with voom
 
-We are now ready to fit our linear models. Limma fits linear models to the data with the assumption that the underlying data is normally distributed. Count data is generally not normally distributed, but log transforming count data gives it a roughly normal distribution sufficient for linear models to work well. To do this, limma transforms the raw count data to log-cpm using library sizes and the normalisation factors we calculated previously.
+We are now ready to fit our linear models. `limma` fits linear models to the data with the assumption that the underlying data is normally distributed. Count data is generally not normally distributed, but log transforming count data gives it a roughly normal distribution sufficient for linear models to work well. To do this, limma transforms the raw count data to log-cpm using library sizes and the normalisation factors we calculated previously.
 
 In addition to the normalisation steps, the limma-voom pipeline uses the `voom()` function to generate weights for the individual observations based on a modelled mean-variance relationship. The mean-variance relationship is used to estimate the variance of each individual observation of sample-gene expression, and by applying these weights to the linear modelling step, it helps the data better meet the assumptions of the linear model and results in more accurate statistical inferences.
 
@@ -357,7 +358,7 @@ The output of `voom()` (our variable `v`) is an `EList` object which contains th
 -   `weights` - numeric matrix of precision weights.
 -   `design` - the design matrix.
 
-The voom plot shows the mean-variance relationship of the data. The x-axis is the average log2 expression of each gene, and the y-axis is the log2 standard deviation of each gene. The idea is that the variance of a gene can be estimated as a function of its mean expression, and that this estimate is more accurate than the direct calculation of the variance.
+The voom plot shows the mean-variance relationship of the data. The x-axis is the average log2 expression of each gene, and the y-axis is the square root of the standard deviation of each gene. The idea is that the variance of a gene can be estimated as a function of its mean expression, and that this estimate is more accurate than the direct calculation of the variance.
 
 ### Fitting the linear model
 
@@ -405,7 +406,7 @@ The function `topTable()` can be used to obtain more information on the differen
 It outputs a data frame with the following information:
 
 -   **Gene details** - gene information, from the `genes` element of the `MArrayLM` object (`efit`).
--   `logFC` - the log2 fold change of the contrast.
+-   `logFC` - the log2-fold-change of the contrast.
 -   `AveExpr` - the average log2 expression of that gene.
 -   `t` - moderated t-statistic.
 -   `P.Value` - p value.
@@ -419,15 +420,16 @@ head(top)
 
 ## MA Plot
 
-The MA plot is a plot of log-fold-change (M-values) against log-expression averages (A-values), this is a common plot in RNA sequencing analysis to visualise the result of differential expression tests. It can be created using the `plotMA()` from the `limma` package. Creating this plot requires 3 pieces of information:
+The MA plot is a plot of log-fold-change (M-values) against log-expression averages (A-values). This is a common plot in RNA-seq analysis to visualise the result of differential expression tests. It can be created using the `plotMA()` function from the `limma` package. Creating this plot requires 3 pieces of information:
 
 -   `object = efit`: The fitted object containing the log-fold-change and log-expression averages
 -   `coef = 1`: The column number of the contrast to plot since there are 3 different contrasts fitted within the object.
--   `status = dt[, 1]`: A vector of numerics denoting whether a gene is up-regulated or down-regulated.
+-   `status = dt[, "BasalvsLP"]`: A vector of numerics denoting whether a gene is up-regulated or down-regulated.
 
 ```{r}
 plotMA(efit, coef = 1, status = dt[, "BasalvsLP"])
 ```
+
 ## Heatmap
 
 Finally we can create a heatmap of the differentially expressed genes. The heatmap is a useful way to visualise the expression of the differentially expressed genes across the samples. We can use the `pheatmap` package to create the heatmap.
@@ -501,7 +503,7 @@ mds_result <- plotMDS(dge, plot = FALSE)
 mds_result
 ```
 
-We see that there are `x` and `y` values in the list returned by the `plotMDS()` function, we can put these into a table and see if they match up to the positions plotted by the function.
+We see that there are `x` and `y` values in the list returned by the `plotMDS()` function. We can put these into a table and see if they match up to the positions plotted by the function.
 
 ```{r}
 mds_tibble <- tibble(
@@ -558,6 +560,12 @@ ggplot(mds_tibble, aes(x = x, y = y, col = group)) +
 
 We see that some labels are very hard to read due to the overlapping, so we can use the `ggrepel` package to fix this. The `ggrepel` package creates labels that repel each other in order to avoid overlap. It's a good idea to use it in conjunction with `geom_point()` in order to keep track of exact coordinates of the data points.
 
+First we need to install the package if you haven't already
+
+```{r, eval = FALSE}
+install.packages("ggrepel")
+```
+
 ```{r}
 library(ggrepel)
 ggplot(mds_tibble, aes(x = x, y = y, col = group)) +
@@ -571,7 +579,7 @@ ggplot(mds_tibble, aes(x = x, y = y, col = group)) +
 
 ## MA plot with ggplot2
 
-We can try to re-create this plot using `ggplot2` to give us more flexibility in plotting. The information we'll need is the log-fold-change, the average log-expression and the differential expression status of each gene. We can extract this information from the `efit` and `top` data frame we created above, as well as gene names for annotation purposes.
+We can try to re-create this plot using `ggplot2` to give us more flexibility in plotting. The information we'll need is the log-fold-change, the average log-expression and the differential expression status of each gene. We can extract this information from the `efit` and `dt` objects we created above, as well as gene names for annotation purposes.
 
 ```{r}
 ma_plot_data <- tibble(
@@ -591,11 +599,9 @@ ma_plot_data %>%
   geom_point()
 ```
 
-While the coordinates of the points are the same, there is still quite a bit of work to do to make this plot look like the one produced by `plotMA()`. First we have to fix up the colours of the points. We also have to make it such that the non-significant points are plotted below the other points. To do this we would need to make it so that the non-significant points are plotted first. We can do this by reordering the levels of the `status` factor so that the non-significant points are plotted first. Labels can also be added using `ggrepel` for the top 15 most DE genes.
+While the coordinates of the points are the same, there is still quite a bit of work to do to make this plot look like the one produced by `plotMA()`. First, we fix the colours. Second, we draw the non-significant points in their own layer underneath, so they don't hide the DE genes. Finally, we label the 15 most significant genes with `ggrepel`.
 
 ```{r}
-library(ggrepel)
-
 ma_plot_data_fct <- ma_plot_data %>%
   mutate(
     status = fct_recode(
@@ -649,7 +655,7 @@ volcano_plot <- ma_plot_data_fct %>%
     max.overlaps = 20,
     show.legend = FALSE
   ) +
-  scale_colour_manual(values = c("black", "blue", "red"))
+  scale_colour_manual(values = scale_cols)
 
 volcano_plot
 
