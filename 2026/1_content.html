@@ -254,7 +254,8 @@ window.Quarto = {
   <li><a href="#mds-plot-with-ggplot2" id="toc-mds-plot-with-ggplot2" class="nav-link" data-scroll-target="#mds-plot-with-ggplot2"><span class="header-section-number">3.1</span> MDS plot with ggplot2</a></li>
   <li><a href="#ma-plot-with-ggplot2" id="toc-ma-plot-with-ggplot2" class="nav-link" data-scroll-target="#ma-plot-with-ggplot2"><span class="header-section-number">3.2</span> MA plot with ggplot2</a></li>
   <li><a href="#volcano-plot" id="toc-volcano-plot" class="nav-link" data-scroll-target="#volcano-plot"><span class="header-section-number">3.3</span> Volcano plot</a></li>
-  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references"><span class="header-section-number">3.4</span> References</a></li>
+  <li><a href="#closing-remarks" id="toc-closing-remarks" class="nav-link" data-scroll-target="#closing-remarks"><span class="header-section-number">3.4</span> Closing remarks</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references"><span class="header-section-number">3.5</span> References</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -1080,7 +1081,7 @@ Up          4817      4778   2102</code></pre>
 <pre><code>An object of class MDS
 $eigen.values
 [1]  6.844419e+01  1.154413e+01  3.790044e+00  2.994025e+00  2.021565e+00
-[6]  1.613173e+00  1.202805e+00  1.094072e+00 -2.379073e-16
+[6]  1.613173e+00  1.202805e+00  1.094072e+00 -3.038972e-15
 
 $eigen.vectors
             [,1]        [,2]        [,3]         [,4]        [,5]        [,6]
@@ -1349,8 +1350,23 @@ $y
 </div>
 </div>
 </section>
-<section id="references" class="level2" data-number="3.4">
-<h2 data-number="3.4" class="anchored" data-anchor-id="references"><span class="header-section-number">3.4</span> References</h2>
+<section id="closing-remarks" class="level2" data-number="3.4">
+<h2 data-number="3.4" class="anchored" data-anchor-id="closing-remarks"><span class="header-section-number">3.4</span> Closing remarks</h2>
+<p>Tools such as large language models (LLMs) can now write an analysis like this one in seconds. What they cannot do is look at your experiment and tell you whether the result is right. That judgement is yours, and it is the most valuable thing to take from this workshop.</p>
+<p>Whoever writes the code, whether you, a colleague or an LLM, check the analysis by asking:</p>
+<ul>
+<li>Do the rows of the sample metadata match the columns of the count matrix?</li>
+<li>What separates the samples on the MDS plot? Is it the biology you expect, or something technical such as sequencing lane or batch?</li>
+<li>Does the voom plot show a smooth trend that decreases with expression? A rise at the low-expression end suggests filtering was insufficient.</li>
+<li>Does the design matrix match the experiment, and does each coefficient mean what you think it means?</li>
+<li>Which way round is each contrast? A positive <code>logFC</code> means higher expression in the first group.</li>
+<li>Are significance calls based on adjusted p-values (<code>adj.P.Val</code>) rather than raw p-values?</li>
+<li>Do the top genes look right when you plot their expression in each sample?</li>
+</ul>
+<p>When an answer surprises you, read the help page of the function involved. Most analyses go wrong in the defaults and assumptions described there, not in the code itself.</p>
+</section>
+<section id="references" class="level2" data-number="3.5">
+<h2 data-number="3.5" class="anchored" data-anchor-id="references"><span class="header-section-number">3.5</span> References</h2>
 
 
 <!-- -->
@@ -2569,8 +2585,23 @@ $y
 <span id="cb68-803"><a href="#cb68-803" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(<span class="st">"output/volcano_plot_BasalvsLP.png"</span>, volcano_plot)</span>
 <span id="cb68-804"><a href="#cb68-804" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb68-805"><a href="#cb68-805" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb68-806"><a href="#cb68-806" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb68-807"><a href="#cb68-807" aria-hidden="true" tabindex="-1"></a><span class="fu">## References</span></span>
+<span id="cb68-806"><a href="#cb68-806" aria-hidden="true" tabindex="-1"></a><span class="fu">## Closing remarks</span></span>
+<span id="cb68-807"><a href="#cb68-807" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb68-808"><a href="#cb68-808" aria-hidden="true" tabindex="-1"></a>Tools such as large language models (LLMs) can now write an analysis like this one in seconds. What they cannot do is look at your experiment and tell you whether the result is right. That judgement is yours, and it is the most valuable thing to take from this workshop.</span>
+<span id="cb68-809"><a href="#cb68-809" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb68-810"><a href="#cb68-810" aria-hidden="true" tabindex="-1"></a>Whoever writes the code, whether you, a colleague or an LLM, check the analysis by asking:</span>
+<span id="cb68-811"><a href="#cb68-811" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb68-812"><a href="#cb68-812" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Do the rows of the sample metadata match the columns of the count matrix?</span>
+<span id="cb68-813"><a href="#cb68-813" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>What separates the samples on the MDS plot? Is it the biology you expect, or something technical such as sequencing lane or batch?</span>
+<span id="cb68-814"><a href="#cb68-814" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Does the voom plot show a smooth trend that decreases with expression? A rise at the low-expression end suggests filtering was insufficient.</span>
+<span id="cb68-815"><a href="#cb68-815" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Does the design matrix match the experiment, and does each coefficient mean what you think it means?</span>
+<span id="cb68-816"><a href="#cb68-816" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Which way round is each contrast? A positive <span class="in">`logFC`</span> means higher expression in the first group.</span>
+<span id="cb68-817"><a href="#cb68-817" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Are significance calls based on adjusted p-values (<span class="in">`adj.P.Val`</span>) rather than raw p-values?</span>
+<span id="cb68-818"><a href="#cb68-818" aria-hidden="true" tabindex="-1"></a><span class="ss">-   </span>Do the top genes look right when you plot their expression in each sample?</span>
+<span id="cb68-819"><a href="#cb68-819" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb68-820"><a href="#cb68-820" aria-hidden="true" tabindex="-1"></a>When an answer surprises you, read the help page of the function involved. Most analyses go wrong in the defaults and assumptions described there, not in the code itself.</span>
+<span id="cb68-821"><a href="#cb68-821" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb68-822"><a href="#cb68-822" aria-hidden="true" tabindex="-1"></a><span class="fu">## References</span></span>
 </code></pre></div><button title="Copy to Clipboard" class="code-copy-button" data-in-quarto-modal=""><i class="bi"></i></button></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
