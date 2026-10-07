@@ -731,5 +731,20 @@ volcano_plot
 ggsave("output/volcano_plot_BasalvsLP.png", volcano_plot)
 ```
 
+## Closing remarks
+
+Tools such as large language models (LLMs) can now write an analysis like this one in seconds. What they cannot do is look at your experiment and tell you whether the result is right. That judgement is yours, and it is the most valuable thing to take from this workshop.
+
+Whoever writes the code, whether you, a colleague or an LLM, check the analysis by asking:
+
+-   Do the rows of the sample metadata match the columns of the count matrix?
+-   What separates the samples on the MDS plot? Is it the biology you expect, or something technical such as sequencing lane or batch?
+-   Does the voom plot show a smooth trend that decreases with expression? A rise at the low-expression end suggests filtering was insufficient.
+-   Does the design matrix match the experiment, and does each coefficient mean what you think it means?
+-   Which way round is each contrast? A positive `logFC` means higher expression in the first group.
+-   Are significance calls based on adjusted p-values (`adj.P.Val`) rather than raw p-values?
+-   Do the top genes look right when you plot their expression in each sample?
+
+When an answer surprises you, read the help page of the function involved. Most analyses go wrong in the defaults and assumptions described there, not in the code itself.
 
 ## References
