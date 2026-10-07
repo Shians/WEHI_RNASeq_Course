@@ -29,7 +29,7 @@ csl: vancouver_superscript.csl
 format:
   html:
     grid:
-      body-width: 800px
+      body-width: 1000px
       margin-width: 20px
       sidebar-width: 300px
     theme: litera_edited.scss
